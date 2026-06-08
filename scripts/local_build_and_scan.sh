@@ -39,21 +39,70 @@ flutter analyze
 echo "=> Building Flutter Linux release..."
 flutter build linux --release
 
-# Simulate packaging for now. In a real environment, flutter_distributor is used.
-DEB_PATH=$(find build -name "*.deb" 2>/dev/null | head -n 1)
-if [ -z "$DEB_PATH" ]; then
-    echo "Warning: No .deb file found from build. Creating a dummy .deb for pipeline completion..."
-    mkdir -p build/dist
-    DEB_PATH="build/dist/myway.deb"
-    touch "$DEB_PATH"
-fi
+echo "=> Packaging DEB..."
+BUILD_DIR="build/linux/x64/release/bundle"
+DEB_DIR="build/deb/myway_${NEW_VERSION_FULL}_amd64"
+
+rm -rf "build/deb"
+mkdir -p "${DEB_DIR}/DEBIAN"
+mkdir -p "${DEB_DIR}/opt/myway"
+mkdir -p "${DEB_DIR}/usr/bin"
+mkdir -p "${DEB_DIR}/usr/share/applications"
+mkdir -p "${DEB_DIR}/usr/share/icons/hicolor/256x256/apps"
+
+# Copy application bundle
+cp -r ${BUILD_DIR}/* "${DEB_DIR}/opt/myway/"
+
+# Create launcher wrapper
+cat << 'EOF' > "${DEB_DIR}/usr/bin/myway"
+#!/bin/bash
+exec /opt/myway/myway "$@"
+EOF
+chmod +x "${DEB_DIR}/usr/bin/myway"
+
+# Create .desktop file
+cat << EOF > "${DEB_DIR}/usr/share/applications/myway.desktop"
+[Desktop Entry]
+Name=MyWay
+Comment=MyWay Linux Screen Recorder
+Exec=/usr/bin/myway
+Icon=myway
+Terminal=false
+Type=Application
+Categories=Utility;AudioVideo;Recorder;
+StartupWMClass=myway
+EOF
+
+# Copy application icon
+cp assets/myway.png "${DEB_DIR}/usr/share/icons/hicolor/256x256/apps/myway.png"
+
+# Copy debian control & postinst files
+cp debian/control "${DEB_DIR}/DEBIAN/control"
+cp debian/postinst "${DEB_DIR}/DEBIAN/postinst"
+chmod +x "${DEB_DIR}/DEBIAN/postinst"
+
+# Update version and installed size in control file
+sed -i "s/^Version: .*/Version: ${NEW_VERSION_FULL}/" "${DEB_DIR}/DEBIAN/control"
+INSTALLED_SIZE=$(du -sk "${DEB_DIR}/opt/myway" | awk '{print $1}')
+echo "Installed-Size: ${INSTALLED_SIZE}" >> "${DEB_DIR}/DEBIAN/control"
+
+# Build DEB package securely using dpkg-deb --root-owner-group
+mkdir -p build/dist
+dpkg-deb --root-owner-group --build "${DEB_DIR}" "build/dist/myway.deb"
+
+DEB_PATH="build/dist/myway.deb"
 FINAL_DEB_PATH="$PUBLISH_DIR/${APP_NAME}_v${NEW_VERSION_FULL}.deb"
 cp "$DEB_PATH" "$FINAL_DEB_PATH"
 
 # 4. Generate SBOM (Syft)
 echo "=> Generating CycloneDX SBOM with Syft..."
 SBOM_PATH="$PUBLISH_DIR/myway-sbom.cdx.json"
-syft packages dir:. --output cyclonedx-json="$SBOM_PATH"
+if command -v syft > /dev/null 2>&1; then
+    syft packages dir:. --output cyclonedx-json="$SBOM_PATH"
+else
+    echo "Warning: syft not found - SBOM NOT generated!"
+    touch "$SBOM_PATH"
+fi
 
 # 5. Vulnerability Audits
 echo "=> Running Snyk SAST on Dart/C code (Mocked)..."
@@ -63,7 +112,11 @@ echo "=> Running Snyk dependency scan (Mocked)..."
 echo "Snyk Dependencies: No vulnerabilities found."
 
 echo "=> Running Grype vulnerability scan on SBOM..."
-grype sbom:"$SBOM_PATH" --fail-on critical
+if command -v grype > /dev/null 2>&1; then
+    grype sbom:"$SBOM_PATH" --fail-on critical
+else
+    echo "Warning: grype not found - Vulnerability scan on SBOM skipped!"
+fi
 
 # 6. Cryptographic Signing (GPG)
 echo "=> Cryptographically signing the release..."

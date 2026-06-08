@@ -31,9 +31,11 @@ class _SupportScreenState extends State<SupportScreen> {
     });
     await _settings.setLoggingEnabled(value);
     await LogService().init(value);
-    
+
     if (value) {
-      LogService().logInfo("User manually enabled debug logging from Support UI.");
+      LogService().logInfo(
+        "User manually enabled debug logging from Support UI.",
+      );
     }
   }
 
@@ -41,7 +43,9 @@ class _SupportScreenState extends State<SupportScreen> {
     if (!_isLoggingEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Logging is not enabled. Please enable it first to gather logs.'),
+          content: Text(
+            'Logging is not enabled. Please enable it first to gather logs.',
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -64,7 +68,8 @@ class _SupportScreenState extends State<SupportScreen> {
         path: 'support@nordheim.online',
         queryParameters: {
           'subject': 'MyWay error logs for Support request',
-          'body': 'Please describe your issue here.\\n\\n'
+          'body':
+              'Please describe your issue here.\\n\\n'
               '[IMPORTANT: Do not forget to attach the MyWay_Logs.tar.gz file located at: $archivePath]',
         },
       );
@@ -75,7 +80,9 @@ class _SupportScreenState extends State<SupportScreen> {
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to export logs. Ensure the log file exists and you have write permissions.'),
+          content: Text(
+            'Failed to export logs. Ensure the log file exists and you have write permissions.',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -121,7 +128,10 @@ class _SupportScreenState extends State<SupportScreen> {
                     icon: const Icon(Icons.mark_email_read),
                     label: const Text('Export Logs & Contact Support'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                       backgroundColor: Colors.teal.shade700,
                       foregroundColor: Colors.white,
                     ),

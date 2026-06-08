@@ -10,7 +10,7 @@ void main() async {
   final isLoggingEnabled = await settings.getLoggingEnabled();
   await LogService().init(isLoggingEnabled);
   LogService().logInfo("MyWay Application Started");
-  
+
   runApp(const MyWayApp());
 }
 
