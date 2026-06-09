@@ -4,7 +4,7 @@ Architecture: amd64
 Maintainer: MyWay Team
 Section: video
 Priority: optional
-License: MIT
+License: AGPL-3.0
 Description: MyWay Linux Screen Recorder
  A Wayland-native screen recorder with PipeWire audio.
  Supports full screen, window, and area capture at up to 4K.
