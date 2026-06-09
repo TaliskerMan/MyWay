@@ -65,8 +65,8 @@ Categories=Utility;Video;AudioVideo;
 StartupWMClass=com.example.myway
 DESKTOP
 
-# Fallback icon
-touch "${DEB_ROOT}/usr/share/icons/hicolor/256x256/apps/myway.png"
+# Copy application icon
+cp "${SCRIPT_DIR}/assets/myway.png" "${DEB_ROOT}/usr/share/icons/hicolor/256x256/apps/myway.png"
 
 if [ -f "${SCRIPT_DIR}/LICENSE" ]; then
     cp "${SCRIPT_DIR}/LICENSE" "${DEB_ROOT}/usr/share/doc/myway/copyright"
