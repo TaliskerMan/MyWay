@@ -25,6 +25,17 @@ NEW_VERSION_FULL="${BASE_VERSION}+${NEW_BUILD_NUM}"
 sed -i "s/version: $CURRENT_VERSION_FULL/version: $NEW_VERSION_FULL/g" pubspec.yaml
 echo "=> Bumped version to $NEW_VERSION_FULL"
 
+# Also update assets/version.json to stay in sync
+cat << EOF > assets/version.json
+{
+  "app_name": "myway",
+  "version": "${BASE_VERSION}",
+  "build_number": "${NEW_BUILD_NUM}",
+  "package_name": "myway"
+}
+EOF
+echo "=> Generated assets/version.json with version ${BASE_VERSION}+${NEW_BUILD_NUM}"
+
 # Set up release directory
 PUBLISH_DIR="$HOME/NOBuilds/${APP_NAME}_${DATE}_v${NEW_VERSION_FULL}"
 mkdir -p "$PUBLISH_DIR"

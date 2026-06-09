@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'recording_screen.dart';
+import 'audio_setup_screen.dart';
 import 'settings_screen.dart';
+import 'recording_screen.dart';
+import 'library_screen.dart';
 import 'support_screen.dart';
 import 'about_screen.dart';
 
@@ -28,15 +30,21 @@ class _MainShellState extends State<MainShell> {
     Widget page;
     switch (_selectedIndex) {
       case 0:
-        page = const RecordingScreen();
+        page = const AudioSetupScreen();
         break;
       case 1:
         page = const SettingsScreen();
         break;
       case 2:
-        page = const SupportScreen();
+        page = const RecordingScreen();
         break;
       case 3:
+        page = const LibraryScreen();
+        break;
+      case 4:
+        page = const SupportScreen();
+        break;
+      case 5:
         page = const AboutScreen();
         break;
       default:
@@ -56,14 +64,24 @@ class _MainShellState extends State<MainShell> {
             labelType: NavigationRailLabelType.all,
             destinations: const [
               NavigationRailDestination(
-                icon: Icon(Icons.videocam_outlined),
-                selectedIcon: Icon(Icons.videocam),
-                label: Text('Recording'),
+                icon: Icon(Icons.mic_none),
+                selectedIcon: Icon(Icons.mic),
+                label: Text('Audio'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.settings_outlined),
                 selectedIcon: Icon(Icons.settings),
                 label: Text('Settings'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.videocam_outlined),
+                selectedIcon: Icon(Icons.videocam),
+                label: Text('Record'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.video_library_outlined),
+                selectedIcon: Icon(Icons.video_library),
+                label: Text('Library'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.support_agent_outlined),

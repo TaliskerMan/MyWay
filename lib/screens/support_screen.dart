@@ -13,11 +13,22 @@ class SupportScreen extends StatefulWidget {
 class _SupportScreenState extends State<SupportScreen> {
   final SettingsService _settings = SettingsService();
   bool _isLoggingEnabled = false;
+  String _logContent = '';
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _refreshLogs();
+  }
+
+  Future<void> _refreshLogs() async {
+    final logs = await LogService().getLastLogLines(100);
+    if (mounted) {
+      setState(() {
+        _logContent = logs;
+      });
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -37,6 +48,7 @@ class _SupportScreenState extends State<SupportScreen> {
         "User manually enabled debug logging from Support UI.",
       );
     }
+    _refreshLogs();
   }
 
   Future<void> _exportAndEmailLogs() async {
@@ -101,43 +113,78 @@ class _SupportScreenState extends State<SupportScreen> {
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade800),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SwitchListTile(
-                  title: const Text('Enable Debug Logging'),
-                  subtitle: const Text(
-                    'Saves diagnostic logs locally to your machine. '
-                    'We never automatically upload telemetry. By design, you must manually export and send these logs if you require support.',
-                  ),
-                  value: _isLoggingEnabled,
-                  onChanged: _toggleLogging,
-                  activeTrackColor: Colors.teal,
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: _exportAndEmailLogs,
-                    icon: const Icon(Icons.mark_email_read),
-                    label: const Text('Export Logs & Contact Support'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade800),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: SwitchListTile(
+                      title: const Text('Enable Debug Logging'),
+                      subtitle: const Text(
+                        'Saves diagnostic logs locally to your machine. '
+                        'We never automatically upload telemetry. By design, you must manually export and send these logs if you require support.',
                       ),
-                      backgroundColor: Colors.teal.shade700,
-                      foregroundColor: Colors.white,
+                      value: _isLoggingEnabled,
+                      onChanged: _toggleLogging,
+                      activeTrackColor: Colors.teal,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: _exportAndEmailLogs,
+                      icon: const Icon(Icons.mark_email_read),
+                      label: const Text('Export Logs & Contact Support'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        backgroundColor: Colors.teal.shade700,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Recent Logs', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
+                      IconButton(
+                        icon: const Icon(Icons.refresh, color: Colors.teal),
+                        onPressed: _refreshLogs,
+                        tooltip: 'Refresh Logs',
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade800),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          _logContent,
+                          style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

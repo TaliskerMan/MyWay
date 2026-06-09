@@ -131,15 +131,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             contentPadding: EdgeInsets.zero,
           ),
-          const Divider(height: 48),
-          const Text(
-            'Recorded Videos',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 16),
-          const Expanded(
-            child: RecentRecordings(), // Resuing the widget we already have
-          ),
         ],
       ),
     );

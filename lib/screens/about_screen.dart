@@ -1,8 +1,60 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: '0.0.0',
+    buildNumber: '0',
+    buildSignature: '',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _initPackageInfo();
+  }
+
+  Future<void> _initPackageInfo() async {
+    try {
+      var info = await PackageInfo.fromPlatform();
+      if (info.version.isEmpty ||
+          info.version == '0.0.0' ||
+          info.version == 'Unknown') {
+        try {
+          final jsonStr = await rootBundle.loadString('assets/version.json');
+          final data = jsonDecode(jsonStr);
+          info = PackageInfo(
+            appName: data['app_name'] ?? info.appName,
+            packageName: data['package_name'] ?? info.packageName,
+            version: data['version'] ?? info.version,
+            buildNumber: data['build_number'] ?? info.buildNumber,
+            buildSignature: info.buildSignature,
+          );
+        } catch (assetErr) {
+          debugPrint('Error reading fallback assets/version.json: $assetErr');
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _packageInfo = info;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching package info: $e');
+    }
+  }
 
   Future<void> _launchURL() async {
     final Uri url = Uri.parse('https://nordheim.online');
@@ -73,6 +125,15 @@ class AboutScreen extends StatelessWidget {
               const Text(
                 'MyWay Screen Recorder',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Version ${_packageInfo.version} (Build ${_packageInfo.buildNumber})',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(

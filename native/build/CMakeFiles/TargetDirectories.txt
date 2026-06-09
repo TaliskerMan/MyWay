@@ -1,0 +1,7 @@
+/home/freecode/antigrav/MyWay/native/build/CMakeFiles/myway_capture.dir
+/home/freecode/antigrav/MyWay/native/build/CMakeFiles/edit_cache.dir
+/home/freecode/antigrav/MyWay/native/build/CMakeFiles/rebuild_cache.dir
+/home/freecode/antigrav/MyWay/native/build/CMakeFiles/list_install_components.dir
+/home/freecode/antigrav/MyWay/native/build/CMakeFiles/install.dir
+/home/freecode/antigrav/MyWay/native/build/CMakeFiles/install/local.dir
+/home/freecode/antigrav/MyWay/native/build/CMakeFiles/install/strip.dir

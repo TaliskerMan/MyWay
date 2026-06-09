@@ -1,3 +1,4 @@
+// Auto-incremented to version 1.0.1 for build release on 2026-06-08 (Rule_017)
 import 'package:flutter/material.dart';
 import 'screens/main_shell.dart';
 

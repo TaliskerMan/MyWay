@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
@@ -7,7 +8,8 @@ class SettingsService {
 
   Future<String> getCodec() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(keyCodec) ?? 'h265';
+    return prefs.getString(keyCodec) ??
+        'h264'; // Default to h264 for high compatibility
   }
 
   Future<void> setCodec(String codec) async {
@@ -30,6 +32,15 @@ class SettingsService {
     return prefs.getString(keyOutputFolder) ?? '~/Videos';
   }
 
+  Future<String> getResolvedOutputFolder() async {
+    final folder = await getOutputFolder();
+    if (folder.startsWith('~/')) {
+      final home = Platform.environment['HOME'] ?? '/home/freecode';
+      return folder.replaceFirst('~/', '$home/');
+    }
+    return folder;
+  }
+
   Future<void> setOutputFolder(String path) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(keyOutputFolder, path);
@@ -43,5 +54,15 @@ class SettingsService {
   Future<void> setLoggingEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('logging_enabled', enabled);
+  }
+
+  Future<int> getAudioDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('audio_device_id') ?? -1;
+  }
+
+  Future<void> setAudioDeviceId(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('audio_device_id', id);
   }
 }

@@ -59,8 +59,27 @@ class LogService {
 
       final outputPath = '${downloadsDir.path}/MyWay_Logs.tar.gz';
 
+      // Flush logger buffers by closing it
+      if (_logger != null) {
+        await _logger!.close();
+      }
+
       // Read the log file
       final fileBytes = await _logFile!.readAsBytes();
+
+      // Reinitialize logger to continue logging
+      if (_isEnabled) {
+        _logger = Logger(
+          printer: PrettyPrinter(
+            methodCount: 0,
+            dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+          ),
+          output: MultiOutput([
+            ConsoleOutput(),
+            if (_logFile != null) FileOutput(file: _logFile!),
+          ]),
+        );
+      }
 
       // Create an Archive with the file
       final archive = Archive();
@@ -85,6 +104,22 @@ class LogService {
     } catch (e) {
       logError("Failed to export logs", e);
       return null;
+    }
+  }
+
+  Future<String> getLastLogLines(int count) async {
+    if (_logFile == null || !await _logFile!.exists()) {
+      return "Log file not found or logging disabled.";
+    }
+    try {
+      final lines = await _logFile!.readAsLines();
+      if (lines.isEmpty) return "Log file is empty.";
+      
+      final startIndex = (lines.length > count) ? lines.length - count : 0;
+      final recentLines = lines.sublist(startIndex);
+      return recentLines.join('\n');
+    } catch (e) {
+      return "Error reading log file: $e";
     }
   }
 }

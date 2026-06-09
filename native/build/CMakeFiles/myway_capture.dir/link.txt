@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,libmyway_capture.so -o libmyway_capture.so CMakeFiles/myway_capture.dir/libmyway_capture.c.o  -lgstvideo-1.0 -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lpipewire-0.3 -ldbus-1 -lgio-2.0 -lgobject-2.0 -lglib-2.0 -lpipewire-0.3 -ldbus-1 -lgio-2.0 

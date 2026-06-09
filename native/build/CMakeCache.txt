@@ -230,6 +230,39 @@ libmyway_capture_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 libmyway_capture_SOURCE_DIR:STATIC=/home/freecode/antigrav/MyWay/native
 
+//Dependencies for the target
+myway_capture_LIB_DEPENDS:STATIC=general;gstvideo-1.0;general;gstbase-1.0;general;gstreamer-1.0;general;gobject-2.0;general;glib-2.0;general;pipewire-0.3;general;dbus-1;general;gio-2.0;general;gobject-2.0;general;glib-2.0;
+
+//Path to a library.
+pkgcfg_lib_DBUS_dbus-1:FILEPATH=/usr/lib/x86_64-linux-gnu/libdbus-1.so
+
+//Path to a library.
+pkgcfg_lib_GIO_gio-2.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libgio-2.0.so
+
+//Path to a library.
+pkgcfg_lib_GIO_glib-2.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libglib-2.0.so
+
+//Path to a library.
+pkgcfg_lib_GIO_gobject-2.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libgobject-2.0.so
+
+//Path to a library.
+pkgcfg_lib_GSTREAMER_glib-2.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libglib-2.0.so
+
+//Path to a library.
+pkgcfg_lib_GSTREAMER_gobject-2.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libgobject-2.0.so
+
+//Path to a library.
+pkgcfg_lib_GSTREAMER_gstbase-1.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libgstbase-1.0.so
+
+//Path to a library.
+pkgcfg_lib_GSTREAMER_gstreamer-1.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libgstreamer-1.0.so
+
+//Path to a library.
+pkgcfg_lib_GSTREAMER_gstvideo-1.0:FILEPATH=/usr/lib/x86_64-linux-gnu/libgstvideo-1.0.so
+
+//Path to a library.
+pkgcfg_lib_PIPEWIRE_pipewire-0.3:FILEPATH=/usr/lib/x86_64-linux-gnu/libpipewire-0.3.so
+
 
 ########################
 # INTERNAL cache entries
@@ -380,45 +413,198 @@ CMAKE_TAPI-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+DBUS_CFLAGS:INTERNAL=-I/usr/include/dbus-1.0;-I/usr/lib/x86_64-linux-gnu/dbus-1.0/include
+DBUS_CFLAGS_I:INTERNAL=
+DBUS_CFLAGS_OTHER:INTERNAL=
+DBUS_FOUND:INTERNAL=1
+DBUS_INCLUDEDIR:INTERNAL=/usr/include
+DBUS_INCLUDE_DIRS:INTERNAL=/usr/include/dbus-1.0;/usr/lib/x86_64-linux-gnu/dbus-1.0/include
+DBUS_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-ldbus-1
+DBUS_LDFLAGS_OTHER:INTERNAL=
+DBUS_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+DBUS_LIBRARIES:INTERNAL=dbus-1
+DBUS_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+DBUS_LIBS:INTERNAL=
+DBUS_LIBS_L:INTERNAL=
+DBUS_LIBS_OTHER:INTERNAL=
+DBUS_LIBS_PATHS:INTERNAL=
+DBUS_MODULE_NAME:INTERNAL=dbus-1
+DBUS_PREFIX:INTERNAL=/usr
+DBUS_STATIC_CFLAGS:INTERNAL=-I/usr/include/dbus-1.0;-I/usr/lib/x86_64-linux-gnu/dbus-1.0/include
+DBUS_STATIC_CFLAGS_I:INTERNAL=
+DBUS_STATIC_CFLAGS_OTHER:INTERNAL=
+DBUS_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/dbus-1.0;/usr/lib/x86_64-linux-gnu/dbus-1.0/include
+DBUS_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-ldbus-1;-lsystemd
+DBUS_STATIC_LDFLAGS_OTHER:INTERNAL=
+DBUS_STATIC_LIBDIR:INTERNAL=
+DBUS_STATIC_LIBRARIES:INTERNAL=dbus-1;systemd
+DBUS_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+DBUS_STATIC_LIBS:INTERNAL=
+DBUS_STATIC_LIBS_L:INTERNAL=
+DBUS_STATIC_LIBS_OTHER:INTERNAL=
+DBUS_STATIC_LIBS_PATHS:INTERNAL=
+DBUS_VERSION:INTERNAL=1.14.10
+DBUS_dbus-1_INCLUDEDIR:INTERNAL=
+DBUS_dbus-1_LIBDIR:INTERNAL=
+DBUS_dbus-1_PREFIX:INTERNAL=
+DBUS_dbus-1_VERSION:INTERNAL=
 //Details about finding PkgConfig
 FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v1.8.1()]
-GSTREAMER_CFLAGS:INTERNAL=
+GIO_CFLAGS:INTERNAL=-I/usr/include;-I/usr/include/glib-2.0;-I/usr/lib/x86_64-linux-gnu/glib-2.0/include;-I/usr/include/libmount;-I/usr/include/blkid;-I/usr/include/gio-unix-2.0;-pthread
+GIO_CFLAGS_I:INTERNAL=
+GIO_CFLAGS_OTHER:INTERNAL=-pthread
+GIO_FOUND:INTERNAL=1
+GIO_INCLUDEDIR:INTERNAL=
+GIO_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include;/usr/include/libmount;/usr/include/blkid;/usr/include/gio-unix-2.0
+GIO_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lgio-2.0;-lgobject-2.0;-lglib-2.0
+GIO_LDFLAGS_OTHER:INTERNAL=
+GIO_LIBDIR:INTERNAL=
+GIO_LIBRARIES:INTERNAL=gio-2.0;gobject-2.0;glib-2.0
+GIO_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+GIO_LIBS:INTERNAL=
+GIO_LIBS_L:INTERNAL=
+GIO_LIBS_OTHER:INTERNAL=
+GIO_LIBS_PATHS:INTERNAL=
+GIO_MODULE_NAME:INTERNAL=
+GIO_PREFIX:INTERNAL=
+GIO_STATIC_CFLAGS:INTERNAL=-I/usr/include;-I/usr/include/glib-2.0;-I/usr/lib/x86_64-linux-gnu/glib-2.0/include;-I/usr/include/libmount;-I/usr/include/blkid;-I/usr/include/gio-unix-2.0;-pthread
+GIO_STATIC_CFLAGS_I:INTERNAL=
+GIO_STATIC_CFLAGS_OTHER:INTERNAL=-pthread
+GIO_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include;/usr/include/libmount;/usr/include/blkid;/usr/include/gio-unix-2.0
+GIO_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-L/usr/lib/x86_64-linux-gnu;-lgmodule-2.0;-pthread;-L/usr/lib/x86_64-linux-gnu;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-ldl;-L/usr/lib/x86_64-linux-gnu;-lblkid;-L/usr/lib;-L/usr/lib/x86_64-linux-gnu;-lsepol;-L/usr/lib/x86_64-linux-gnu;-lsepol;-lpcre2-8;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-lgio-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lgobject-2.0;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-L/usr/lib/x86_64-linux-gnu;-lgmodule-2.0;-pthread;-L/usr/lib/x86_64-linux-gnu;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lz;-lmount;-ldl;-L/usr/lib/x86_64-linux-gnu;-lblkid;-L/usr/lib/x86_64-linux-gnu;-lsepol;-lselinux;-L/usr/lib/x86_64-linux-gnu;-lsepol;-lpcre2-8
+GIO_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread
+GIO_STATIC_LIBDIR:INTERNAL=
+GIO_STATIC_LIBRARIES:INTERNAL=m;pcre2-8;glib-2.0;m;pcre2-8;ffi;gmodule-2.0;m;dl;blkid;sepol;sepol;pcre2-8;m;pcre2-8;ffi;gio-2.0;m;pcre2-8;gobject-2.0;glib-2.0;m;pcre2-8;ffi;gmodule-2.0;glib-2.0;m;z;mount;dl;blkid;sepol;selinux;sepol;pcre2-8
+GIO_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu
+GIO_STATIC_LIBS:INTERNAL=
+GIO_STATIC_LIBS_L:INTERNAL=
+GIO_STATIC_LIBS_OTHER:INTERNAL=
+GIO_STATIC_LIBS_PATHS:INTERNAL=
+GIO_VERSION:INTERNAL=
+GIO_gio-2.0_INCLUDEDIR:INTERNAL=/usr/include
+GIO_gio-2.0_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+GIO_gio-2.0_MODULE_NAME:INTERNAL=gio-2.0
+GIO_gio-2.0_PREFIX:INTERNAL=/usr
+GIO_gio-2.0_VERSION:INTERNAL=2.80.0
+GIO_gio-unix-2.0_INCLUDEDIR:INTERNAL=/usr/include
+GIO_gio-unix-2.0_LIBDIR:INTERNAL=
+GIO_gio-unix-2.0_MODULE_NAME:INTERNAL=gio-unix-2.0
+GIO_gio-unix-2.0_PREFIX:INTERNAL=/usr
+GIO_gio-unix-2.0_VERSION:INTERNAL=2.80.0
+GSTREAMER_CFLAGS:INTERNAL=-I/usr/include/gstreamer-1.0;-I/usr/include/glib-2.0;-I/usr/lib/x86_64-linux-gnu/glib-2.0/include;-I/usr/include;-I/usr/include/x86_64-linux-gnu;-pthread;-I/usr/include/orc-0.4
 GSTREAMER_CFLAGS_I:INTERNAL=
-GSTREAMER_CFLAGS_OTHER:INTERNAL=
-GSTREAMER_FOUND:INTERNAL=
+GSTREAMER_CFLAGS_OTHER:INTERNAL=-pthread
+GSTREAMER_FOUND:INTERNAL=1
 GSTREAMER_INCLUDEDIR:INTERNAL=
+GSTREAMER_INCLUDE_DIRS:INTERNAL=/usr/include/gstreamer-1.0;/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include;/usr/include;/usr/include/x86_64-linux-gnu;/usr/include/orc-0.4
+GSTREAMER_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lgstvideo-1.0;-lgstbase-1.0;-lgstreamer-1.0;-lgobject-2.0;-lglib-2.0
+GSTREAMER_LDFLAGS_OTHER:INTERNAL=
 GSTREAMER_LIBDIR:INTERNAL=
+GSTREAMER_LIBRARIES:INTERNAL=gstvideo-1.0;gstbase-1.0;gstreamer-1.0;gobject-2.0;glib-2.0
+GSTREAMER_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
 GSTREAMER_LIBS:INTERNAL=
 GSTREAMER_LIBS_L:INTERNAL=
 GSTREAMER_LIBS_OTHER:INTERNAL=
 GSTREAMER_LIBS_PATHS:INTERNAL=
 GSTREAMER_MODULE_NAME:INTERNAL=
 GSTREAMER_PREFIX:INTERNAL=
-GSTREAMER_STATIC_CFLAGS:INTERNAL=
+GSTREAMER_STATIC_CFLAGS:INTERNAL=-I/usr/include/gstreamer-1.0;-I/usr/include/glib-2.0;-I/usr/lib/x86_64-linux-gnu/glib-2.0/include;-I/usr/include;-I/usr/include/x86_64-linux-gnu;-pthread;-I/usr/include/orc-0.4;-DLZMA_API_STATIC;-DLZMA_API_STATIC;-DLZMA_API_STATIC;-DLZMA_API_STATIC
 GSTREAMER_STATIC_CFLAGS_I:INTERNAL=
-GSTREAMER_STATIC_CFLAGS_OTHER:INTERNAL=
+GSTREAMER_STATIC_CFLAGS_OTHER:INTERNAL=-pthread;-DLZMA_API_STATIC;-DLZMA_API_STATIC;-DLZMA_API_STATIC;-DLZMA_API_STATIC
+GSTREAMER_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/gstreamer-1.0;/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include;/usr/include;/usr/include/x86_64-linux-gnu;/usr/include/orc-0.4
+GSTREAMER_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lm;-ldl;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-L/usr/lib/x86_64-linux-gnu;-lgmodule-2.0;-pthread;-L/usr/lib/x86_64-linux-gnu;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lbz2;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-L/usr/lib;-pthread;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-llzma;-pthread;-lpthread;-pthread;-lgstbase-1.0;-lm;-ldl;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-L/usr/lib/x86_64-linux-gnu;-pthread;-L/usr/lib/x86_64-linux-gnu;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lbz2;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-pthread;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-llzma;-pthread;-lpthread;-pthread;-L/usr/lib/x86_64-linux-gnu;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lm;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-lgmodule-2.0;-pthread;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lgstvideo-1.0;-lm;-lm;-ldl;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-L/usr/lib/x86_64-linux-gnu;-lgmodule-2.0;-pthread;-L/usr/lib/x86_64-linux-gnu;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lbz2;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-pthread;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-llzma;-pthread;-lpthread;-pthread;-lgstbase-1.0;-lgstreamer-1.0;-lm;-ldl;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-L/usr/lib/x86_64-linux-gnu;-pthread;-L/usr/lib/x86_64-linux-gnu;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lunwind;-ldw;-lbz2;-lelf;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-pthread;-L/usr/lib/x86_64-linux-gnu;-L/usr/lib/x86_64-linux-gnu;-lz;-llzma;-pthread;-lpthread;-lzstd;-pthread;-L/usr/lib/x86_64-linux-gnu;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lgobject-2.0;-lm;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-lffi;-lgmodule-2.0;-pthread;-lglib-2.0;-lm;-pthread;-L/usr/lib/x86_64-linux-gnu;-lpcre2-8;-L/usr/lib/x86_64-linux-gnu;-lorc-0.4;-lm;-pthread
+GSTREAMER_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread
 GSTREAMER_STATIC_LIBDIR:INTERNAL=
+GSTREAMER_STATIC_LIBRARIES:INTERNAL=m;dl;m;pcre2-8;glib-2.0;m;pcre2-8;ffi;gmodule-2.0;m;pcre2-8;bz2;z;z;lzma;pthread;gstbase-1.0;m;dl;m;pcre2-8;glib-2.0;m;pcre2-8;ffi;glib-2.0;m;pcre2-8;bz2;z;z;lzma;pthread;m;pcre2-8;m;pcre2-8;ffi;gmodule-2.0;glib-2.0;m;pcre2-8;gstvideo-1.0;m;m;dl;m;pcre2-8;glib-2.0;m;pcre2-8;ffi;gmodule-2.0;m;pcre2-8;bz2;z;z;lzma;pthread;gstbase-1.0;gstreamer-1.0;m;dl;m;pcre2-8;glib-2.0;m;pcre2-8;ffi;glib-2.0;m;pcre2-8;unwind;dw;bz2;elf;z;z;lzma;pthread;zstd;m;pcre2-8;gobject-2.0;m;pcre2-8;ffi;gmodule-2.0;glib-2.0;m;pcre2-8;orc-0.4;m
+GSTREAMER_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu
 GSTREAMER_STATIC_LIBS:INTERNAL=
 GSTREAMER_STATIC_LIBS_L:INTERNAL=
 GSTREAMER_STATIC_LIBS_OTHER:INTERNAL=
 GSTREAMER_STATIC_LIBS_PATHS:INTERNAL=
 GSTREAMER_VERSION:INTERNAL=
-GSTREAMER_gstreamer-1.0_INCLUDEDIR:INTERNAL=
-GSTREAMER_gstreamer-1.0_LIBDIR:INTERNAL=
-GSTREAMER_gstreamer-1.0_PREFIX:INTERNAL=
-GSTREAMER_gstreamer-1.0_VERSION:INTERNAL=
-GSTREAMER_gstreamer-base-1.0_INCLUDEDIR:INTERNAL=
-GSTREAMER_gstreamer-base-1.0_LIBDIR:INTERNAL=
-GSTREAMER_gstreamer-base-1.0_PREFIX:INTERNAL=
-GSTREAMER_gstreamer-base-1.0_VERSION:INTERNAL=
-GSTREAMER_gstreamer-video-1.0_INCLUDEDIR:INTERNAL=
-GSTREAMER_gstreamer-video-1.0_LIBDIR:INTERNAL=
-GSTREAMER_gstreamer-video-1.0_PREFIX:INTERNAL=
-GSTREAMER_gstreamer-video-1.0_VERSION:INTERNAL=
+GSTREAMER_gstreamer-1.0_INCLUDEDIR:INTERNAL=/usr/include
+GSTREAMER_gstreamer-1.0_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+GSTREAMER_gstreamer-1.0_MODULE_NAME:INTERNAL=gstreamer-1.0
+GSTREAMER_gstreamer-1.0_PREFIX:INTERNAL=/usr
+GSTREAMER_gstreamer-1.0_VERSION:INTERNAL=1.24.2
+GSTREAMER_gstreamer-base-1.0_INCLUDEDIR:INTERNAL=/usr/include
+GSTREAMER_gstreamer-base-1.0_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+GSTREAMER_gstreamer-base-1.0_MODULE_NAME:INTERNAL=gstreamer-base-1.0
+GSTREAMER_gstreamer-base-1.0_PREFIX:INTERNAL=/usr
+GSTREAMER_gstreamer-base-1.0_VERSION:INTERNAL=1.24.2
+GSTREAMER_gstreamer-video-1.0_INCLUDEDIR:INTERNAL=/usr/include
+GSTREAMER_gstreamer-video-1.0_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+GSTREAMER_gstreamer-video-1.0_MODULE_NAME:INTERNAL=gstreamer-video-1.0
+GSTREAMER_gstreamer-video-1.0_PREFIX:INTERNAL=/usr
+GSTREAMER_gstreamer-video-1.0_VERSION:INTERNAL=1.24.2
+PIPEWIRE_CFLAGS:INTERNAL=-I/usr/include/pipewire-0.3;-I/usr/include/spa-0.2;-D_REENTRANT;-fno-strict-aliasing;-fno-strict-overflow
+PIPEWIRE_CFLAGS_I:INTERNAL=
+PIPEWIRE_CFLAGS_OTHER:INTERNAL=-D_REENTRANT;-fno-strict-aliasing;-fno-strict-overflow
+PIPEWIRE_FOUND:INTERNAL=1
+PIPEWIRE_INCLUDEDIR:INTERNAL=/usr/include
+PIPEWIRE_INCLUDE_DIRS:INTERNAL=/usr/include/pipewire-0.3;/usr/include/spa-0.2
+PIPEWIRE_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lpipewire-0.3
+PIPEWIRE_LDFLAGS_OTHER:INTERNAL=
+PIPEWIRE_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+PIPEWIRE_LIBRARIES:INTERNAL=pipewire-0.3
+PIPEWIRE_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+PIPEWIRE_LIBS:INTERNAL=
+PIPEWIRE_LIBS_L:INTERNAL=
+PIPEWIRE_LIBS_OTHER:INTERNAL=
+PIPEWIRE_LIBS_PATHS:INTERNAL=
+PIPEWIRE_MODULE_NAME:INTERNAL=libpipewire-0.3
+PIPEWIRE_PREFIX:INTERNAL=/usr
+PIPEWIRE_STATIC_CFLAGS:INTERNAL=-I/usr/include/pipewire-0.3;-I/usr/include/spa-0.2;-D_REENTRANT;-fno-strict-aliasing;-fno-strict-overflow
+PIPEWIRE_STATIC_CFLAGS_I:INTERNAL=
+PIPEWIRE_STATIC_CFLAGS_OTHER:INTERNAL=-D_REENTRANT;-fno-strict-aliasing;-fno-strict-overflow
+PIPEWIRE_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/pipewire-0.3;/usr/include/spa-0.2
+PIPEWIRE_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lpipewire-0.3
+PIPEWIRE_STATIC_LDFLAGS_OTHER:INTERNAL=
+PIPEWIRE_STATIC_LIBDIR:INTERNAL=
+PIPEWIRE_STATIC_LIBRARIES:INTERNAL=pipewire-0.3
+PIPEWIRE_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+PIPEWIRE_STATIC_LIBS:INTERNAL=
+PIPEWIRE_STATIC_LIBS_L:INTERNAL=
+PIPEWIRE_STATIC_LIBS_OTHER:INTERNAL=
+PIPEWIRE_STATIC_LIBS_PATHS:INTERNAL=
+PIPEWIRE_VERSION:INTERNAL=1.5.85
+PIPEWIRE_libpipewire-0.3_INCLUDEDIR:INTERNAL=
+PIPEWIRE_libpipewire-0.3_LIBDIR:INTERNAL=
+PIPEWIRE_libpipewire-0.3_PREFIX:INTERNAL=
+PIPEWIRE_libpipewire-0.3_VERSION:INTERNAL=
 //ADVANCED property for variable: PKG_CONFIG_ARGN
 PKG_CONFIG_ARGN-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
 PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
 //linker supports push/pop state
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
+__pkg_config_arguments_DBUS:INTERNAL=REQUIRED;dbus-1
+__pkg_config_arguments_GIO:INTERNAL=REQUIRED;gio-2.0;gio-unix-2.0
+__pkg_config_arguments_GSTREAMER:INTERNAL=REQUIRED;gstreamer-1.0;gstreamer-base-1.0;gstreamer-video-1.0
+__pkg_config_arguments_PIPEWIRE:INTERNAL=REQUIRED;libpipewire-0.3
+__pkg_config_checked_DBUS:INTERNAL=1
+__pkg_config_checked_GIO:INTERNAL=1
+__pkg_config_checked_GSTREAMER:INTERNAL=1
+__pkg_config_checked_PIPEWIRE:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_DBUS_dbus-1
+pkgcfg_lib_DBUS_dbus-1-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GIO_gio-2.0
+pkgcfg_lib_GIO_gio-2.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GIO_glib-2.0
+pkgcfg_lib_GIO_glib-2.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GIO_gobject-2.0
+pkgcfg_lib_GIO_gobject-2.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GSTREAMER_glib-2.0
+pkgcfg_lib_GSTREAMER_glib-2.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GSTREAMER_gobject-2.0
+pkgcfg_lib_GSTREAMER_gobject-2.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GSTREAMER_gstbase-1.0
+pkgcfg_lib_GSTREAMER_gstbase-1.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GSTREAMER_gstreamer-1.0
+pkgcfg_lib_GSTREAMER_gstreamer-1.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_GSTREAMER_gstvideo-1.0
+pkgcfg_lib_GSTREAMER_gstvideo-1.0-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_PIPEWIRE_pipewire-0.3
+pkgcfg_lib_PIPEWIRE_pipewire-0.3-ADVANCED:INTERNAL=1
+prefix_result:INTERNAL=
 

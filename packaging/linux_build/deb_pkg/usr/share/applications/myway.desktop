@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=MyWay
+Comment=Screen and Audio Capture utility
+Exec=/usr/bin/myway
+Icon=myway
+Terminal=false
+Type=Application
+Categories=Utility;Video;AudioVideo;
+StartupWMClass=com.example.myway
