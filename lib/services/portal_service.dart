@@ -235,5 +235,6 @@ class PortalService {
     return PortalResult(nodeId, fd);
   }
   
+  // ignore: unused_field
   dynamic _lastFdResponse;
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/audio_meter.dart';
-import '../services/audio_service.dart';
 import '../services/settings_service.dart';
 
 class AudioSetupScreen extends StatefulWidget {
@@ -11,7 +10,6 @@ class AudioSetupScreen extends StatefulWidget {
 }
 
 class _AudioSetupScreenState extends State<AudioSetupScreen> {
-  AudioDevice? _selectedAudioDevice;
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +45,6 @@ class _AudioSetupScreenState extends State<AudioSetupScreen> {
                 onDeviceChanged: (device) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted) {
-                      setState(() {
-                        _selectedAudioDevice = device;
-                      });
                       if (device != null) {
                         SettingsService().setAudioDeviceId(device.id);
                       }

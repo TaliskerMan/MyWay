@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
-import '../widgets/recent_recordings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
