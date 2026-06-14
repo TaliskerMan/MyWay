@@ -3,7 +3,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/settings_service.dart';
 import '../services/log_service.dart';
 
+/// UI support and diagnostics screen offering debug log toggle options,
+/// email reporting utilities, and recent log outputs console rendering.
 class SupportScreen extends StatefulWidget {
+  /// Creates a new [SupportScreen] instance.
   const SupportScreen({super.key});
 
   @override

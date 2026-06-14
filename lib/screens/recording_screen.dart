@@ -6,7 +6,10 @@ import '../services/capture_service.dart';
 import '../services/portal_service.dart';
 import '../services/settings_service.dart';
 
+/// Main interactive control screen managing recording state triggers,
+/// capture types selection, and PipeWire/GStreamer lifecycle setups.
 class RecordingScreen extends StatefulWidget {
+  /// Creates a new [RecordingScreen] control instance.
   const RecordingScreen({super.key});
 
   @override
@@ -470,7 +473,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 }
 
+/// A simple status indicator widget that fades in and out to signify
+/// that video/audio recording is actively running.
 class BlinkingRedDot extends StatefulWidget {
+  /// Creates a [BlinkingRedDot] animation widget.
   const BlinkingRedDot({super.key});
 
   @override

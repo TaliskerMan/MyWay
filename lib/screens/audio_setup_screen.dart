@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import '../widgets/audio_meter.dart';
 import '../services/settings_service.dart';
 
+/// A UI configuration screen containing mic level testing indicators
+/// and primary audio device dropdown selection fields.
 class AudioSetupScreen extends StatefulWidget {
+  /// Creates a new [AudioSetupScreen] instance.
   const AudioSetupScreen({super.key});
 
   @override

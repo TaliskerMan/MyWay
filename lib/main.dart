@@ -15,7 +15,9 @@ void main() async {
   runApp(const MyWayApp());
 }
 
+/// The main application widget for the MyWay screen recorder client.
 class MyWayApp extends StatelessWidget {
+  /// Creates a new [MyWayApp] instance.
   const MyWayApp({super.key});
 
   @override

@@ -1,18 +1,43 @@
+/// Configuration parameters required to initialize a screen and audio capture session.
 class RecordingParams {
-  final String mode; // "fullscreen", "window", "area"
-  final String codec; // "h265", "h264", "av1"
-  final int videoBitrate;
-  final int videoNodeId; // Wayland PipeWire video stream node ID
-  final int waylandFd;
-  final int audioNodeId;
-  final String outputPath;
-  final int areaX;
-  final int areaY;
-  final int areaWidth;
-  final int areaHeight;
-  final bool
-  isWayland; // true for Wayland (PipeWire), false for X11 (ximagesrc)
+  /// The capture mode: "fullscreen", "window", or "area".
+  final String mode;
 
+  /// The video encoding codec: "h265", "h264", or "av1".
+  final String codec;
+
+  /// Target video encoding bitrate in bps.
+  final int videoBitrate;
+
+  /// The PipeWire stream node ID for Wayland video capture.
+  final int videoNodeId;
+
+  /// Native Wayland connection file descriptor.
+  final int waylandFd;
+
+  /// Audio capture input device/node ID.
+  final int audioNodeId;
+
+  /// The absolute output destination path for the recorded media file.
+  final String outputPath;
+
+  /// Horizontal coordinate offset of the custom capture area bounding box.
+  final int areaX;
+
+  /// Vertical coordinate offset of the custom capture area bounding box.
+  final int areaY;
+
+  /// Width dimension of the custom capture area bounding box.
+  final int areaWidth;
+
+  /// Height dimension of the custom capture area bounding box.
+  final int areaHeight;
+
+  /// Whether the session runs on a Wayland display server (requires PipeWire)
+  /// rather than X11 (uses ximagesrc).
+  final bool isWayland;
+
+  /// Creates a [RecordingParams] configuration instance.
   RecordingParams({
     required this.mode,
     required this.codec,

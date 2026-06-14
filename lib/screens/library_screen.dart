@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widgets/recent_recordings.dart';
 
+/// A UI screen hosting the recordings library and listing past captures.
 class LibraryScreen extends StatelessWidget {
+  /// Creates a new [LibraryScreen] instance.
   const LibraryScreen({super.key});
 
   @override

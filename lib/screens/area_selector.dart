@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// A full-screen transparent modal overlay enabling users to select a desktop
+/// recording area box via drag and pan gestures.
 class AreaSelector extends StatefulWidget {
+  /// Creates a new [AreaSelector] overlay page.
   const AreaSelector({super.key});
 
   @override
@@ -146,8 +149,13 @@ class _AreaSelectorState extends State<AreaSelector> {
   }
 }
 
+/// Custom painter that draws a semi-transparent dark mask overlay with a clear,
+/// highlighted window cutout matching the user's selected area.
 class CutoutPainter extends CustomPainter {
+  /// The active rectangular region drawn by the user.
   final Rect? rect;
+
+  /// Creates a [CutoutPainter] instance with a highlighted [rect] boundary.
   CutoutPainter(this.rect);
 
   @override

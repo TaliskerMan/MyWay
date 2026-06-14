@@ -4,7 +4,7 @@ import 'package:ffi/ffi.dart';
 
 import '../models/recording_params.dart';
 
-// Represents the native C struct MyWayCaptureParams
+/// FFI structural layout mapping the native C-based capture parameter configuration.
 final class MyWayCaptureParamsStruct extends Struct {
   @Array(32)
   external Array<Uint8> mode;
@@ -77,11 +77,21 @@ typedef MyWayGetMonitorVu = double Function();
 typedef MyWayTeardownFunc = Void Function();
 typedef MyWayTeardown = void Function();
 
+/// Snapshot model holding metrics from the active recording session.
 class CaptureStatus {
+  /// Session duration recorded so far in seconds.
   final int durationSec;
+
+  /// Target stream video encoding bitrate.
   final int bitrateKbps;
+
+  /// Counter of dropped video frames detected by the GStreamer engine.
   final int frameDrops;
+
+  /// Current audio volume meter amplitude level.
   final double vuLevel;
+
+  /// Creates a [CaptureStatus] metric packet.
   CaptureStatus(
     this.durationSec,
     this.bitrateKbps,
@@ -90,11 +100,18 @@ class CaptureStatus {
   );
 }
 
-// Global stream controllers to pass updates to the Flutter UI layer
+/// Global stream controller to broadcast capture metric snapshots to the UI.
 final captureStatusStreamController =
     StreamController<CaptureStatus>.broadcast();
+
+/// Global stream controller to broadcast live audio volume meter levels to the UI.
 final audioMonitorStreamController = StreamController<double>.broadcast();
 
+/// Main service interface driving the background audio and video recording pipelines.
+///
+/// Integrates with a local shared object library `libmyway_capture.so` using Dart FFI.
+/// Broadcasts telemetry updates, including recording duration and audio level indicators,
+/// using asynchronous streams.
 class CaptureService {
   late DynamicLibrary _lib;
   late MyWayInit _mywayInit;
@@ -112,6 +129,7 @@ class CaptureService {
   Timer? _captureTimer;
   Timer? _monitorTimer;
 
+  /// Loads the shared object library and binds all capture methods.
   CaptureService() {
     _lib = DynamicLibrary.open('libmyway_capture.so');
     _mywayInit = _lib
@@ -157,10 +175,15 @@ class CaptureService {
         .asFunction();
   }
 
+  /// Initializes the native capturing backend.
   void initialize() {
     _mywayInit();
   }
 
+  /// Commences a new desktop screen and audio capture session.
+  ///
+  /// Allocates C-compatible parameters memory using [RecordingParams], dispatches
+  /// the FFI start invocation, and runs a periodic timer to poll metrics.
   void startCapture(RecordingParams params) {
     _captureTimer?.cancel();
 
@@ -192,12 +215,14 @@ class CaptureService {
     });
   }
 
+  /// Stops the active capture session and cancels the metrics poll timers.
   void stopCapture() {
     _captureTimer?.cancel();
     _captureTimer = null;
     _mywayStopCapture();
   }
 
+  /// Begins live monitoring of input decibel levels on [audioNodeId] without recording.
   void startAudioMonitor(int audioNodeId) {
     _monitorTimer?.cancel();
     _mywayStartAudioMonitor(audioNodeId);
@@ -209,12 +234,14 @@ class CaptureService {
     });
   }
 
+  /// Stops the background audio monitoring timer.
   void stopAudioMonitor() {
     _monitorTimer?.cancel();
     _monitorTimer = null;
     _mywayStopAudioMonitor();
   }
 
+  /// Shuts down the background pipelines and frees loaded FFI resource hooks.
   void teardown() {
     _captureTimer?.cancel();
     _monitorTimer?.cancel();
@@ -236,12 +263,14 @@ class CaptureService {
     }
   }
 
+  /// Configures PipeWire file descriptor extraction from the portal handle at [path].
   void setupFdExtraction(String path) {
     final ptr = path.toNativeUtf8();
     _mywaySetupFdExtraction(ptr);
     calloc.free(ptr);
   }
 
+  /// Reads the file descriptor value returned by the extraction routine.
   int readExtractedFd() {
     return _mywayReadExtractedFd();
   }

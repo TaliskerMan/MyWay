@@ -3,7 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/settings_service.dart';
 
+/// A UI widget displaying lists of recently recorded video files.
+///
+/// Scans the resolved output storage directory, displaying details including
+/// filenames, sizes, and modifications dates, and supporting playback, renaming,
+/// and parent folder navigation.
 class RecentRecordings extends StatefulWidget {
+  /// Creates a new [RecentRecordings] view widget.
   const RecentRecordings({super.key});
 
   @override

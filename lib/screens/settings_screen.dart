@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
 
+/// UI settings screen allowing configuration modifications for video quality,
+/// target codecs, stream bitrates, and media folders.
 class SettingsScreen extends StatefulWidget {
+  /// Creates a new [SettingsScreen] instance.
   const SettingsScreen({super.key});
 
   @override

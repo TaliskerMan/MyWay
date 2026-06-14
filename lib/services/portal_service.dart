@@ -4,15 +4,20 @@ import 'package:dbus/dbus.dart';
 import 'capture_service.dart';
 import 'log_service.dart';
 
+/// Struct holding the returned PipeWire stream node ID and extracted file descriptor.
 class PortalResult {
   final int nodeId;
   final int fd;
   PortalResult(this.nodeId, this.fd);
 }
 
+/// Service coordinating DBus Desktop Portals for Wayland screen captures.
+///
+/// Handles session creation, display selection prompts, and PipeWire stream file descriptor extraction.
 class PortalService {
   final DBusClient _client = DBusClient.session();
 
+  /// Closes the underlying session DBus connection.
   Future<void> close() async {
     await _client.close();
   }
@@ -81,6 +86,11 @@ class PortalService {
   }
 
   // Executes the ScreenCast portal orchestration flow to get the PipeWire video node ID and FD
+  /// Runs the full org.freedesktop.portal.ScreenCast DBus orchestration pipeline.
+  ///
+  /// Requests screen-sharing authorization, waits for user selection signals,
+  /// opens the PipeWire remote handle, and extracts the UNIX file descriptor
+  /// using SCM_RIGHTS socket messages.
   Future<PortalResult> obtainVideoNodeId() async {
     final portalObj = DBusRemoteObject(
       _client,
@@ -235,6 +245,7 @@ class PortalService {
     return PortalResult(nodeId, fd);
   }
   
+  /// Reference holding the last DBus descriptor response to prevent early garbage collection.
   // ignore: unused_field
   dynamic _lastFdResponse;
 }

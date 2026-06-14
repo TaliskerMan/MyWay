@@ -3,8 +3,13 @@ import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive.dart';
 
+/// Singleton service providing unified console and file logging.
+///
+/// Manages file buffers, log level classification, and gzip archive exports.
 class LogService {
   static final LogService _instance = LogService._internal();
+
+  /// Retrieve the singleton instance of [LogService].
   factory LogService() => _instance;
 
   Logger? _logger;
@@ -13,6 +18,9 @@ class LogService {
 
   LogService._internal();
 
+  /// Initializes the logger instance and configuration.
+  ///
+  /// Binds log outputs to console and local file paths if [isEnabled] is true.
   Future<void> init(bool isEnabled) async {
     _isEnabled = isEnabled;
     if (_isEnabled) {
@@ -36,18 +44,23 @@ class LogService {
     }
   }
 
+  /// Logs an informational [message] to the active outputs.
   void logInfo(String message) {
     if (_isEnabled && _logger != null) {
       _logger!.i(message);
     }
   }
 
+  /// Logs an error message with optional [error] objects and [stackTrace] maps.
   void logError(String message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled && _logger != null) {
       _logger!.e(message, error: error, stackTrace: stackTrace);
     }
   }
 
+  /// Compresses the active log file to a `.tar.gz` archive in the User Downloads folder.
+  ///
+  /// Returns the absolute path to the generated archive, or null on failure.
   Future<String?> exportLogs() async {
     if (_logFile == null || !await _logFile!.exists()) {
       return null;
@@ -107,6 +120,7 @@ class LogService {
     }
   }
 
+  /// Reads and returns the last [count] lines of the log file.
   Future<String> getLastLogLines(int count) async {
     if (_logFile == null || !await _logFile!.exists()) {
       return "Log file not found or logging disabled.";

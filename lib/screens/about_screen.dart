@@ -4,7 +4,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// A UI screen displaying application ownership information, version telemetry,
+/// developer website redirects, and GPL version 3 licensing details.
 class AboutScreen extends StatefulWidget {
+  /// Creates a new [AboutScreen] instance.
   const AboutScreen({super.key});
 
   @override
@@ -137,7 +140,7 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Copyright by Chuck Talk, a Nordheim Online product',
+                'Copyright Chuck Talk, a Nordheim Online Product',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),

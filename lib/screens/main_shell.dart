@@ -8,7 +8,9 @@ import 'library_screen.dart';
 import 'support_screen.dart';
 import 'about_screen.dart';
 
+/// Main scaffolding layout shell hosting the navigation rail and page view switches.
 class MainShell extends StatefulWidget {
+  /// Creates a new [MainShell] layout container.
   const MainShell({super.key});
 
   @override
