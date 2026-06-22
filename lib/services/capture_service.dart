@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
@@ -82,22 +83,16 @@ class CaptureStatus {
   /// Session duration recorded so far in seconds.
   final int durationSec;
 
-  /// Target stream video encoding bitrate.
-  final int bitrateKbps;
-
-  /// Counter of dropped video frames detected by the GStreamer engine.
-  final int frameDrops;
-
   /// Current audio volume meter amplitude level.
   final double vuLevel;
 
   /// Creates a [CaptureStatus] metric packet.
-  CaptureStatus(
-    this.durationSec,
-    this.bitrateKbps,
-    this.frameDrops,
-    this.vuLevel,
-  );
+  ///
+  /// Note: bitrate and dropped-frame counters were removed because they were
+  /// never measured (always reported 0) — exposing them implied data the
+  /// pipeline did not actually provide. Re-add them only when wired to real
+  /// values from the GStreamer pipeline.
+  CaptureStatus(this.durationSec, this.vuLevel);
 }
 
 /// Global stream controller to broadcast capture metric snapshots to the UI.
@@ -131,7 +126,17 @@ class CaptureService {
 
   /// Loads the shared object library and binds all capture methods.
   CaptureService() {
-    _lib = DynamicLibrary.open('libmyway_capture.so');
+    try {
+      _lib = DynamicLibrary.open('libmyway_capture.so');
+    } catch (e) {
+      // The library is bundled at <app>/lib/libmyway_capture.so and resolved
+      // via the runner's $ORIGIN/lib rpath. A failure here means a packaging
+      // problem; surface it clearly instead of an opaque FFI crash.
+      throw StateError(
+          'MyWay: failed to load native capture library libmyway_capture.so. '
+          'Ensure it is installed alongside the app (rpath \$ORIGIN/lib). '
+          'Underlying error: $e');
+    }
     _mywayInit = _lib
         .lookup<NativeFunction<MyWayInitFunc>>('myway_init')
         .asFunction();
@@ -203,6 +208,11 @@ class CaptureService {
     struct.isWayland = params.isWayland ? 1 : 0;
     struct.waylandFd = params.waylandFd;
 
+    // Ownership contract: myway_start_capture() consumes every field of the
+    // params struct synchronously (it builds the GStreamer pipeline description
+    // up front and copies all strings/ints before returning; the recording
+    // thread it spawns receives NULL user-data, not this pointer). It is
+    // therefore safe to free the struct immediately after the call returns.
     _mywayStartCapture(structPtr);
     calloc.free(structPtr);
 
@@ -210,7 +220,7 @@ class CaptureService {
     _captureTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       final duration = _mywayGetRecordingDuration();
       final vu = _mywayGetRecordingVu();
-      captureStatusStreamController.add(CaptureStatus(duration, 0, 0, vu));
+      captureStatusStreamController.add(CaptureStatus(duration, vu));
       audioMonitorStreamController.add(vu);
     });
   }
@@ -253,14 +263,28 @@ class CaptureService {
     String str,
     int maxLength,
   ) {
-    final bytes = str.codeUnits;
+    final bytes = encodeForNativeBuffer(str, maxLength);
     for (var i = 0; i < maxLength; i++) {
-      if (i < bytes.length) {
-        array[i] = bytes[i];
-      } else {
-        array[i] = 0;
-      }
+      array[i] = i < bytes.length ? bytes[i] : 0;
     }
+  }
+
+  /// Encodes [str] as UTF-8 for a fixed C `char[maxLength]` buffer.
+  ///
+  /// Previously this used `str.codeUnits` (UTF-16 code units), which corrupted
+  /// any non-ASCII output path (accents, CJK, emoji — common under `~/Videos`).
+  /// Now it encodes UTF-8, truncates to `maxLength - 1` bytes so there is always
+  /// room for a terminator, and the returned list never includes the trailing
+  /// NUL (the caller zero-fills the remainder). Pure + testable.
+  static List<int> encodeForNativeBuffer(String str, int maxLength) {
+    final encoded = utf8.encode(str);
+    if (encoded.length <= maxLength - 1) return encoded;
+    // Truncate without splitting a multi-byte UTF-8 sequence.
+    var end = maxLength - 1;
+    while (end > 0 && (encoded[end] & 0xC0) == 0x80) {
+      end--; // back up over UTF-8 continuation bytes
+    }
+    return encoded.sublist(0, end);
   }
 
   /// Configures PipeWire file descriptor extraction from the portal handle at [path].

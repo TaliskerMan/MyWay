@@ -3,6 +3,14 @@
 ## Overview
 This document represents an automated AI security audit of the MyWay Screen Recorder application (Flutter + C FFI) executed prior to the build release. The audit specifically focuses on ensuring adherence to the "ShadowAgent" principles ("first, do no harm") and strict user-space execution parameters.
 
+## Scope & limitations
+This report covers **dependency CVEs (SCA)** and **generic code-pattern scanning (SAST)** plus manual review notes. A clean automated scan means "no known-vulnerable dependencies and no obvious unsafe patterns" — it is **not** a proof that the privileged data paths are secure. In particular, automated scanning did **not** flag two issues that manual review found and that are fixed in this release:
+
+- The screen-capture file descriptor was handed off over a **predictable, world-writable `/tmp` UNIX socket** (now moved to a per-user `XDG_RUNTIME_DIR` socket with mode `0600`).
+- Native string buffers (output path, codec, mode) were filled with **UTF-16 code units with no guaranteed NUL terminator**, corrupting non-ASCII paths (now UTF-8 with bounded, NUL-terminated copies).
+
+Treat the scan results below accordingly, and re-run the scans after these fixes.
+
 ## Codebase Audit (Flutter Layer)
 - **Dependencies**: The `pubspec.yaml` relies only on established first-party or highly trusted community packages (`url_launcher`, `shared_preferences`, `ffi`, `path_provider`, `dbus`).
 - **File System Access**: Access is restricted to user-defined directories requested via the UI for storing `.mkv`/`.mp4` recordings. No arbitrary system file traversal is present.
@@ -20,4 +28,4 @@ As part of the CI/CD release script, this software undergoes:
 2. **Snyk Test**: Scanning the dependency tree for known CVEs.
 3. **Syft + Grype**: Generating a CycloneDX JSON Software Bill of Materials (SBOM) and auditing it against the Anchore vulnerability database.
 
-**Conclusion**: The application meets the required security standards for deployment. No immediate vulnerabilities were detected in the source code logic.
+**Conclusion**: The dependency and SAST scans surfaced no known-vulnerable packages or obvious unsafe patterns. This is a clean *automated* result, not a guarantee about the privileged FD-transfer path — see *Scope & limitations*. The two manually-identified issues above were fixed in this release; the scans should be re-run to confirm.

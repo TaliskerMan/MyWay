@@ -21,7 +21,7 @@ MyWay is distributed as a cryptographically signed Debian (`.deb`) package for s
 1. Download the latest `.deb` release from the [GitHub Releases](https://github.com/TaliskerMan/MyWay/releases) page.
 2. Install the package using `apt` to resolve any system dependencies automatically:
    ```bash
-   sudo apt install ./MyWay_v1.0.0+5.deb
+   sudo apt install ./myway_*_amd64.deb
    ```
 3. MyWay will now be available in your application launcher!
 

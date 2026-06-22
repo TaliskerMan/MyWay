@@ -7,6 +7,8 @@
 #include <inttypes.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 // Globals to manage recording state
@@ -600,7 +602,20 @@ void myway_setup_fd_extraction(const char* socket_path) {
     strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
     
     unlink(socket_path);
-    bind(extraction_socket, (struct sockaddr*)&addr, sizeof(addr));
+
+    // Restrict the socket to the owner (0600) so no other local user can
+    // connect and grab the screen-capture file descriptor. Set a tight umask
+    // across bind() (which honours umask for the created node), then restore it,
+    // and chmod() explicitly as belt-and-suspenders.
+    mode_t old_umask = umask(0077);
+    if (bind(extraction_socket, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
+        umask(old_umask);
+        close(extraction_socket);
+        extraction_socket = -1;
+        return;
+    }
+    umask(old_umask);
+    chmod(socket_path, 0600);
     listen(extraction_socket, 1);
 }
 

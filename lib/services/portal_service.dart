@@ -1,8 +1,30 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:math';
 import 'package:dbus/dbus.dart';
 import 'capture_service.dart';
 import 'log_service.dart';
+
+/// Builds a per-user, unpredictable path for the FD hand-off UNIX socket.
+///
+/// Prefers `XDG_RUNTIME_DIR` (per-user, mode 0700); falls back to
+/// `/run/user/<uid>` and finally `/tmp` only if neither is available.
+String _fdSocketPath() {
+  String? base = Platform.environment['XDG_RUNTIME_DIR'];
+  if (base == null || base.isEmpty) {
+    final uid = Platform.environment['UID'];
+    final candidate = uid != null ? '/run/user/$uid' : null;
+    if (candidate != null && Directory(candidate).existsSync()) {
+      base = candidate;
+    } else {
+      base = '/tmp'; // last resort; the C side still chmod 0600s the socket
+    }
+  }
+  final rnd = Random.secure();
+  final token =
+      List.generate(16, (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+  return '$base/myway_fd_${pid}_$token.sock';
+}
 
 /// Struct holding the returned PipeWire stream node ID and extracted file descriptor.
 class PortalResult {
@@ -91,7 +113,39 @@ class PortalService {
   /// Requests screen-sharing authorization, waits for user selection signals,
   /// opens the PipeWire remote handle, and extracts the UNIX file descriptor
   /// using SCM_RIGHTS socket messages.
+  /// Returns true if the `org.freedesktop.portal.ScreenCast` interface is
+  /// present (a portal backend is installed and running for this session).
+  Future<bool> isScreenCastPortalAvailable() async {
+    try {
+      final obj = DBusRemoteObject(
+        _client,
+        name: 'org.freedesktop.portal.Desktop',
+        path: DBusObjectPath('/org/freedesktop/portal/desktop'),
+      );
+      final v = await obj.getProperty(
+        'org.freedesktop.portal.ScreenCast',
+        'version',
+        signature: DBusSignature('u'),
+      );
+      return v is DBusUint32 && v.value >= 1;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<PortalResult> obtainVideoNodeId() async {
+    // Detect up front whether a ScreenCast portal backend is actually present,
+    // so a non-portal session (e.g. plain X11, or a compositor without
+    // xdg-desktop-portal) gets a clear message instead of failing deep inside
+    // the portal call.
+    if (!await isScreenCastPortalAvailable()) {
+      throw Exception(
+          'Screen recording requires xdg-desktop-portal with a ScreenCast '
+          'backend (e.g. xdg-desktop-portal-gnome) on a Wayland session. It '
+          'does not appear to be available here. On X11, use window/area '
+          'capture instead of full-screen portal capture.');
+    }
+
     final portalObj = DBusRemoteObject(
       _client,
       name: 'org.freedesktop.portal.Desktop',
@@ -214,8 +268,11 @@ class PortalService {
 
     final dbusFd = fdResponse.values[0] as DBusUnixFd;
 
-    // Use UNIX socket to extract the integer FD into C layer
-    final sockPath = '/tmp/myway_dbus_fd_${DateTime.now().millisecondsSinceEpoch}.sock';
+    // Use a UNIX socket to hand the screen-capture FD to the C layer.
+    // Security: place it in the per-user XDG_RUNTIME_DIR (mode 0700, owned by
+    // this user) rather than the world-writable /tmp, and use an unpredictable
+    // random name. The C binder additionally chmod()s the socket to 0600.
+    final sockPath = _fdSocketPath();
     CaptureService().setupFdExtraction(sockPath);
 
     int fd = -1;

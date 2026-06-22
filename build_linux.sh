@@ -20,6 +20,18 @@ else
     exit 1
 fi
 PKG_NAME="myway"
+
+# Single source of truth: regenerate assets/version.json from pubspec so the
+# About screen can never show a stale version.
+echo "==> Writing assets/version.json from pubspec (${VERSION}, build ${BUILD_SUFFIX})..."
+cat > "${SCRIPT_DIR}/assets/version.json" <<JSON
+{
+  "app_name": "myway",
+  "version": "${VERSION}",
+  "build_number": "${BUILD_SUFFIX}",
+  "package_name": "myway"
+}
+JSON
 FLUTTER="flutter"
 ARTIFACTS="${SCRIPT_DIR}/packaging/linux_build/artifacts"
 BUILD_DIR="${SCRIPT_DIR}/build/linux/x64/release/bundle"

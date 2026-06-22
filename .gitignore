@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Experimental spikes and stray compiled test binaries / images (P2-9).
+# Kept locally for reference but must not ship in the tree.
+/scratch/
+/test_audio
+/test_audio.c
+/test_gdbus
+/test_pipeline
+/test_xid_c*
+test_xid_c*.png
+/packaging/
