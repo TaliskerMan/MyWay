@@ -62,8 +62,8 @@ class _RecentRecordingsState extends State<RecentRecordings> {
           });
         }
       }
-    } catch (e) {
-      debugPrint('Error scanning recordings: $e');
+    } catch (error) {
+      debugPrint('Error scanning recordings: $error');
       if (mounted) {
         setState(() {
           _files = [];
@@ -85,8 +85,8 @@ class _RecentRecordingsState extends State<RecentRecordings> {
       if (!await launchUrl(uri)) {
         throw 'Could not launch $uri';
       }
-    } catch (e) {
-      debugPrint('Error launching video: $e');
+    } catch (error) {
+      debugPrint('Error launching video: $error');
       // Fallback to xdg-open
       await Process.run('xdg-open', [path]);
     }
@@ -100,8 +100,8 @@ class _RecentRecordingsState extends State<RecentRecordings> {
       if (!await launchUrl(uri)) {
         throw 'Could not launch $uri';
       }
-    } catch (e) {
-      debugPrint('Error launching folder: $e');
+    } catch (error) {
+      debugPrint('Error launching folder: $error');
       // Fallback to xdg-open
       await Process.run('xdg-open', [parentDir]);
     }
@@ -148,11 +148,11 @@ class _RecentRecordingsState extends State<RecentRecordings> {
       try {
         await file.rename(newPath);
         _scanFiles();
-      } catch (e) {
-        debugPrint('Error renaming file: $e');
+      } catch (error) {
+        debugPrint('Error renaming file: $error');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to rename file: $e')),
+            SnackBar(content: Text('Failed to rename file: $error')),
           );
         }
       }

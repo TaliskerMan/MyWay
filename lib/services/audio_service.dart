@@ -63,8 +63,8 @@ class AudioService {
 
     final List<AudioDevice> devices = [];
     if (devicesPtr != nullptr) {
-      for (var i = 0; i < count; i++) {
-        final ref = (devicesPtr + i).ref;
+      for (var index = 0; index < count; index++) {
+        final ref = (devicesPtr + index).ref;
         final charCodes = <int>[];
         for (var j = 0; j < 256; j++) {
           final char = ref.name[j];

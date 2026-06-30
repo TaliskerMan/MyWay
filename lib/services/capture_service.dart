@@ -128,14 +128,14 @@ class CaptureService {
   CaptureService() {
     try {
       _lib = DynamicLibrary.open('libmyway_capture.so');
-    } catch (e) {
+    } catch (error) {
       // The library is bundled at <app>/lib/libmyway_capture.so and resolved
       // via the runner's $ORIGIN/lib rpath. A failure here means a packaging
       // problem; surface it clearly instead of an opaque FFI crash.
       throw StateError(
           'MyWay: failed to load native capture library libmyway_capture.so. '
           'Ensure it is installed alongside the app (rpath \$ORIGIN/lib). '
-          'Underlying error: $e');
+          'Underlying error: $error');
     }
     _mywayInit = _lib
         .lookup<NativeFunction<MyWayInitFunc>>('myway_init')
@@ -264,8 +264,8 @@ class CaptureService {
     int maxLength,
   ) {
     final bytes = encodeForNativeBuffer(str, maxLength);
-    for (var i = 0; i < maxLength; i++) {
-      array[i] = i < bytes.length ? bytes[i] : 0;
+    for (var index = 0; index < maxLength; index++) {
+      array[index] = index < bytes.length ? bytes[index] : 0;
     }
   }
 

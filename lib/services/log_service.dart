@@ -114,8 +114,8 @@ class LogService {
       await outFile.writeAsBytes(gzipData);
 
       return outputPath;
-    } catch (e) {
-      logError("Failed to export logs", e);
+    } catch (error) {
+      logError("Failed to export logs", error);
       return null;
     }
   }
@@ -132,8 +132,8 @@ class LogService {
       final startIndex = (lines.length > count) ? lines.length - count : 0;
       final recentLines = lines.sublist(startIndex);
       return recentLines.join('\n');
-    } catch (e) {
-      return "Error reading log file: $e";
+    } catch (error) {
+      return "Error reading log file: $error";
     }
   }
 }

@@ -49,8 +49,8 @@ class _AudioMeterState extends State<AudioMeter> {
         }
         _loading = false;
       });
-    } catch (e) {
-      debugPrint('Error loading audio devices: $e');
+    } catch (error) {
+      debugPrint('Error loading audio devices: $error');
       setState(() {
         _devices = [];
         _selectedDevice = null;
@@ -61,10 +61,10 @@ class _AudioMeterState extends State<AudioMeter> {
   }
 
   void _subscribeToMeter() {
-    _subscription = audioMonitorStreamController.stream.listen((val) {
+    _subscription = audioMonitorStreamController.stream.listen((levelValue) {
       if (mounted) {
         setState(() {
-          _level = val;
+          _level = levelValue;
         });
       }
     });
@@ -73,16 +73,16 @@ class _AudioMeterState extends State<AudioMeter> {
   void _startMonitoring(int nodeId) {
     try {
       _captureService.startAudioMonitor(nodeId);
-    } catch (e) {
-      debugPrint('Error starting audio monitor: $e');
+    } catch (error) {
+      debugPrint('Error starting audio monitor: $error');
     }
   }
 
   void _stopMonitoring() {
     try {
       _captureService.stopAudioMonitor();
-    } catch (e) {
-      debugPrint('Error stopping audio monitor: $e');
+    } catch (error) {
+      debugPrint('Error stopping audio monitor: $error');
     }
   }
 

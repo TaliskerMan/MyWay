@@ -47,12 +47,12 @@ class PortalService {
   // Helper to parse D-Bus dictionaries into string-indexed maps
   Map<String, DBusValue> _parseDict(DBusDict dict) {
     final result = <String, DBusValue>{};
-    dict.children.forEach((key, val) {
+    dict.children.forEach((key, value) {
       if (key is DBusString) {
-        if (val is DBusVariant) {
-          result[key.value] = val.value;
+        if (value is DBusVariant) {
+          result[key.value] = value.value;
         } else {
-          result[key.value] = val;
+          result[key.value] = value;
         }
       }
     });
@@ -98,8 +98,8 @@ class PortalService {
         }
         sub?.cancel();
       },
-      onError: (e) {
-        completer.completeError(e);
+      onError: (error) {
+        completer.completeError(error);
         sub?.cancel();
       },
     );
@@ -122,12 +122,12 @@ class PortalService {
         name: 'org.freedesktop.portal.Desktop',
         path: DBusObjectPath('/org/freedesktop/portal/desktop'),
       );
-      final v = await obj.getProperty(
+      final propertyValue = await obj.getProperty(
         'org.freedesktop.portal.ScreenCast',
         'version',
         signature: DBusSignature('u'),
       );
-      return v is DBusUint32 && v.value >= 1;
+      return propertyValue is DBusUint32 && propertyValue.value >= 1;
     } catch (_) {
       return false;
     }
@@ -287,8 +287,8 @@ class PortalService {
 
       fd = CaptureService().readExtractedFd();
       LogService().logInfo("MyWay Portal: Successfully extracted PipeWire FD: $fd via SCM_RIGHTS");
-    } catch (e) {
-      LogService().logError("MyWay Portal: Failed to extract FD: $e");
+    } catch (error) {
+      LogService().logError("MyWay Portal: Failed to extract FD: $error");
     }
 
     if (fd == -1) {

@@ -66,10 +66,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Text('AV1 (SVT-AV1)'),
                       ),
                     ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _codec = val);
-                        _settings.setCodec(val);
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _codec = value);
+                        _settings.setCodec(value);
                       }
                     },
                   ),
