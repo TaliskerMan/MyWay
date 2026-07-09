@@ -1,10 +1,10 @@
 Package: myway
-Version: 1.0.1-2
-Architecture: amd64
+Version: 1.0.1-7
+Architecture: arm64
 Maintainer: Chuck Talk <chuck@nordheim.online>
 Priority: optional
 Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-pipewire, pipewire, xdg-desktop-portal
-Installed-Size: 27004
+Installed-Size: 25164
 Description: Screen and Audio Capture utility for Linux
  MyWay allows users to record their screen and audio seamlessly
  using modern Wayland and PipeWire technologies.

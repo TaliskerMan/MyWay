@@ -34,7 +34,26 @@ cat > "${SCRIPT_DIR}/assets/version.json" <<JSON
 JSON
 FLUTTER="flutter"
 ARTIFACTS="${SCRIPT_DIR}/packaging/linux_build/artifacts"
-BUILD_DIR="${SCRIPT_DIR}/build/linux/x64/release/bundle"
+
+# Fix clang++ linker issue on some arm64/Linux environments
+if [ -d "/usr/lib/gcc/aarch64-linux-gnu/13" ]; then
+    export LIBRARY_PATH="/usr/lib/gcc/aarch64-linux-gnu/13:${LIBRARY_PATH:-}"
+fi
+if [ -d "/usr/include/c++/13" ]; then
+    export CPLUS_INCLUDE_PATH="/usr/include/c++/13:/usr/include/aarch64-linux-gnu/c++/13:${CPLUS_INCLUDE_PATH:-}"
+fi
+
+UNAME_M=$(uname -m)
+if [ "$UNAME_M" = "x86_64" ]; then
+    FLUTTER_ARCH="x64"
+elif [ "$UNAME_M" = "aarch64" ]; then
+    FLUTTER_ARCH="arm64"
+else
+    FLUTTER_ARCH="$UNAME_M"
+fi
+
+ARCH=$(dpkg --print-architecture)
+BUILD_DIR="${SCRIPT_DIR}/build/linux/${FLUTTER_ARCH}/release/bundle"
 DEB_ROOT="${SCRIPT_DIR}/packaging/linux_build/deb_pkg"
 
 echo "==> MyWay Linux Release Builder v${VERSION}+${BUILD_SUFFIX}"
@@ -89,7 +108,7 @@ INSTALLED_SIZE=$(du -sk "${DEB_ROOT}" | awk '{print $1}')
 cat > "${DEB_ROOT}/DEBIAN/control" << CONTROL
 Package: myway
 Version: ${VERSION}-${BUILD_SUFFIX}
-Architecture: amd64
+Architecture: ${ARCH}
 Maintainer: Chuck Talk <chuck@nordheim.online>
 Priority: optional
 Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-pipewire, pipewire, xdg-desktop-portal
@@ -100,7 +119,7 @@ Description: Screen and Audio Capture utility for Linux
 CONTROL
 
 echo "==> Building .deb package..."
-DEB_FILE="${ARTIFACTS}/${PKG_NAME}_${VERSION}-${BUILD_SUFFIX}_amd64.deb"
+DEB_FILE="${ARTIFACTS}/${PKG_NAME}_${VERSION}-${BUILD_SUFFIX}_${ARCH}.deb"
 dpkg-deb --build --root-owner-group "${DEB_ROOT}" "${DEB_FILE}"
 
 echo "==> Generating SHA512 hash..."
@@ -120,6 +139,12 @@ echo "==> Copying to NOBuilds directory..."
 NOBUILDS_DIR="${HOME}/NOBuilds/MyWay/v${VERSION}+${BUILD_SUFFIX}"
 mkdir -p "${NOBUILDS_DIR}"
 cp "${ARTIFACTS}/"* "${NOBUILDS_DIR}/"
+
+# Copy license, readme, sbom, and generate source code archive
+cp "${SCRIPT_DIR}/LICENSE" "${NOBUILDS_DIR}/" || true
+cp "${SCRIPT_DIR}/README.md" "${NOBUILDS_DIR}/" || true
+cp "${SCRIPT_DIR}/Audit/sbom.json" "${NOBUILDS_DIR}/" || true
+tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=packaging/linux_build -czf "${NOBUILDS_DIR}/myway_source.tar.gz" -C "${SCRIPT_DIR}" .
 
 echo ""
 echo "==================================="
