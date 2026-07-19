@@ -54,3 +54,39 @@ app.*.map.json
 /test_xid_c*
 test_xid_c*.png
 /packaging/
+
+# ---- Build output (belongs in ~/NOBuilds per L-Release) ----
+build/
+local-build/
+.dart_tool/
+.dart_tools_tmp/
+.pybuild/
+
+# ---- Packaging and staging trees ----
+packaging/*/staging/
+packaging/*/artifacts/
+packaging/*_amd64/
+packaging/*_arm64/
+packaging/deb_pkg/
+artifacts/
+
+# ---- Compiled outputs ----
+*.so
+*.dylib
+*.a
+*.dill
+*.framework/
+
+# ---- Release packages ----
+*.deb
+*.dmg
+*.rpm
+*.msi
+*.AppImage
+*.tar.gz
+
+# ---- Vendored tool binaries ----
+bin/
+
+# ---- macOS cruft ----
+.DS_Store
