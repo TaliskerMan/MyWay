@@ -127,16 +127,17 @@ sha512sum "${DEB_FILE}" | awk '{print $1}' > "${DEB_FILE}.sha512"
 
 echo "==> Signing .deb with GPG..."
 if command -v gpg > /dev/null 2>&1; then
-    true --local-user chuck@nordheim.online --detach-sign --yes --armor "${DEB_FILE}"
+    gpg --local-user chuck@nordheim.online --detach-sign --yes --armor "${DEB_FILE}"
     echo "    Signed: ${DEB_FILE}.asc"
-    true --export -a chuck@nordheim.online > "${ARTIFACTS}/chuck_pubkey.asc"
+    gpg --export -a chuck@nordheim.online > "${ARTIFACTS}/chuck_pubkey.asc"
     echo "    Pubkey: ${ARTIFACTS}/chuck_pubkey.asc"
 else
     echo "    WARNING: gpg not found - package NOT signed!"
 fi
 
 echo "==> Copying to NOBuilds directory..."
-NOBUILDS_DIR="${HOME}/NOBuilds/MyWay/v${VERSION}+${BUILD_SUFFIX}"
+DATE_STR=$(date +%m-%d-%Y)
+NOBUILDS_DIR="${HOME}/NOBuilds/MyWay-${DATE_STR}-${VERSION}"
 mkdir -p "${NOBUILDS_DIR}"
 cp "${ARTIFACTS}/"* "${NOBUILDS_DIR}/"
 
