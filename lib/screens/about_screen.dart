@@ -20,7 +20,6 @@ class _AboutScreenState extends State<AboutScreen> {
     packageName: 'Unknown',
     version: '0.0.0',
     buildNumber: '0',
-    buildSignature: '',
   );
 
   @override
@@ -60,7 +59,7 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   Future<void> _launchURL() async {
-    final Uri url = Uri.parse('https://nordheim.online');
+    final url = Uri.parse('https://nordheim.online');
     if (!await launchUrl(url)) {
       debugPrint('Could not launch $url');
     }
@@ -69,7 +68,7 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24),
       child: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -94,7 +93,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     ],
                   ),
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
                       '✕',
                       style: TextStyle(fontSize: 16, color: Colors.grey),
@@ -106,7 +105,7 @@ class _AboutScreenState extends State<AboutScreen> {
                         onTap: _launchURL,
                         borderRadius: BorderRadius.circular(16),
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(8),
                           child: Image.asset(
                             'assets/noln.png',
                             width: 80,
@@ -158,7 +157,8 @@ class _AboutScreenState extends State<AboutScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
-                  '''This program is free software: you can redistribute it and/or modify
+                  '''
+This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
 published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.

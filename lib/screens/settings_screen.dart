@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/settings_service.dart';
+import 'package:myway/services/settings_service.dart';
 
 /// UI settings screen allowing configuration modifications for video quality,
 /// target codecs, stream bitrates, and media folders.
@@ -34,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

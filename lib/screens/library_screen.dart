@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/recent_recordings.dart';
+import 'package:myway/widgets/recent_recordings.dart';
 
 /// A UI screen hosting the recordings library and listing past captures.
 class LibraryScreen extends StatelessWidget {
@@ -8,31 +8,31 @@ class LibraryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
+    return const Padding(
+      padding: EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 'Recordings Library',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Icon(Icons.video_library, color: Colors.teal, size: 32),
+              SizedBox(width: 12),
+              Icon(Icons.video_library, color: Colors.teal, size: 32),
             ],
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'View, play, or rename your captured recordings.',
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
-          const SizedBox(height: 24),
-          const Expanded(
+          SizedBox(height: 24),
+          Expanded(
             child: RecentRecordings(),
           ),
         ],

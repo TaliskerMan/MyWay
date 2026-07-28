@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/audio_meter.dart';
-import '../services/settings_service.dart';
+import 'package:myway/services/settings_service.dart';
+import 'package:myway/widgets/audio_meter.dart';
 
 /// A UI configuration screen containing mic level testing indicators
 /// and primary audio device dropdown selection fields.
@@ -13,25 +13,24 @@ class AudioSetupScreen extends StatefulWidget {
 }
 
 class _AudioSetupScreenState extends State<AudioSetupScreen> {
-
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Text(
+              Text(
                 'Audio Setup',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Icon(Icons.mic, color: Colors.teal, size: 32),
+              SizedBox(width: 12),
+              Icon(Icons.mic, color: Colors.teal, size: 32),
             ],
           ),
           const SizedBox(height: 32),

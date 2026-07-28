@@ -1,22 +1,22 @@
 import 'dart:io';
+
+import 'package:archive/archive.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:archive/archive.dart';
 
 /// Singleton service providing unified console and file logging.
 ///
 /// Manages file buffers, log level classification, and gzip archive exports.
 class LogService {
-  static final LogService _instance = LogService._internal();
-
   /// Retrieve the singleton instance of [LogService].
   factory LogService() => _instance;
+
+  LogService._internal();
+  static final LogService _instance = LogService._internal();
 
   Logger? _logger;
   File? _logFile;
   bool _isEnabled = false;
-
-  LogService._internal();
 
   /// Initializes the logger instance and configuration.
   ///
@@ -37,9 +37,9 @@ class LogService {
           if (_logFile != null) FileOutput(file: _logFile!),
         ]),
       );
-      _logger?.i("Logging enabled.");
+      _logger?.i('Logging enabled.');
     } else {
-      _logger?.i("Logging disabled.");
+      _logger?.i('Logging disabled.');
       _logger = null;
     }
   }
@@ -107,7 +107,7 @@ class LogService {
       final tarData = TarEncoder().encode(archive);
 
       // Encode it to gzip
-      final gzipData = GZipEncoder().encode(tarData);
+      final gzipData = const GZipEncoder().encode(tarData);
 
       // Write the compressed data to the output file
       final outFile = File(outputPath);
@@ -115,7 +115,7 @@ class LogService {
 
       return outputPath;
     } catch (error) {
-      logError("Failed to export logs", error);
+      logError('Failed to export logs', error);
       return null;
     }
   }
@@ -123,17 +123,17 @@ class LogService {
   /// Reads and returns the last [count] lines of the log file.
   Future<String> getLastLogLines(int count) async {
     if (_logFile == null || !await _logFile!.exists()) {
-      return "Log file not found or logging disabled.";
+      return 'Log file not found or logging disabled.';
     }
     try {
       final lines = await _logFile!.readAsLines();
-      if (lines.isEmpty) return "Log file is empty.";
-      
+      if (lines.isEmpty) return 'Log file is empty.';
+
       final startIndex = (lines.length > count) ? lines.length - count : 0;
       final recentLines = lines.sublist(startIndex);
       return recentLines.join('\n');
     } catch (error) {
-      return "Error reading log file: $error";
+      return 'Error reading log file: $error';
     }
   }
 }

@@ -152,11 +152,11 @@ class _AreaSelectorState extends State<AreaSelector> {
 /// Custom painter that draws a semi-transparent dark mask overlay with a clear,
 /// highlighted window cutout matching the user's selected area.
 class CutoutPainter extends CustomPainter {
-  /// The active rectangular region drawn by the user.
-  final Rect? rect;
-
   /// Creates a [CutoutPainter] instance with a highlighted [rect] boundary.
   CutoutPainter(this.rect);
+
+  /// The active rectangular region drawn by the user.
+  final Rect? rect;
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -9,7 +9,10 @@ import 'package:myway/services/capture_service.dart';
 void main() {
   group('CaptureService.encodeForNativeBuffer', () {
     test('encodes ASCII as UTF-8 bytes', () {
-      final out = CaptureService.encodeForNativeBuffer('/home/u/Videos/a.mp4', 1024);
+      final out = CaptureService.encodeForNativeBuffer(
+        '/home/u/Videos/a.mp4',
+        1024,
+      );
       expect(out, utf8.encode('/home/u/Videos/a.mp4'));
     });
 

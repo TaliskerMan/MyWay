@@ -1,17 +1,17 @@
 // Auto-incremented to version 1.0.2 for build release on 2026-07-20 (Rule_017)
 // Auto-incremented to version 1.0.1 for build release on 2026-06-08 (Rule_017)
 import 'package:flutter/material.dart';
-import 'screens/main_shell.dart';
+import 'package:myway/screens/main_shell.dart';
 
-import 'services/log_service.dart';
-import 'services/settings_service.dart';
+import 'package:myway/services/log_service.dart';
+import 'package:myway/services/settings_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = SettingsService();
   final isLoggingEnabled = await settings.getLoggingEnabled();
   await LogService().init(isLoggingEnabled);
-  LogService().logInfo("MyWay Application Started");
+  LogService().logInfo('MyWay Application Started');
 
   runApp(const MyWayApp());
 }

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../models/recording_params.dart';
-import '../services/capture_service.dart';
-import '../services/portal_service.dart';
-import '../services/settings_service.dart';
+import 'package:myway/models/recording_params.dart';
+import 'package:myway/services/capture_service.dart';
+import 'package:myway/services/portal_service.dart';
+import 'package:myway/services/settings_service.dart';
 
 /// Main interactive control screen managing recording state triggers,
 /// capture types selection, and PipeWire/GStreamer lifecycle setups.
@@ -86,8 +86,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
     });
 
     try {
-      int videoNodeId = 0;
-      int waylandFd = 0;
+      var videoNodeId = 0;
+      var waylandFd = 0;
       if (_isWayland) {
         // 1. Get PipeWire stream Node ID and FD via Wayland portal
         _portal = PortalService();
@@ -229,7 +229,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:myway/services/log_service.dart';
+import 'package:myway/services/settings_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../services/settings_service.dart';
-import '../services/log_service.dart';
 
 /// UI support and diagnostics screen offering debug log toggle options,
 /// email reporting utilities, and recent log outputs console rendering.
@@ -48,7 +48,7 @@ class _SupportScreenState extends State<SupportScreen> {
 
     if (value) {
       LogService().logInfo(
-        "User manually enabled debug logging from Support UI.",
+        'User manually enabled debug logging from Support UI.',
       );
     }
     _refreshLogs();
@@ -67,7 +67,7 @@ class _SupportScreenState extends State<SupportScreen> {
       return;
     }
 
-    final String? archivePath = await LogService().exportLogs();
+    final archivePath = await LogService().exportLogs();
 
     if (archivePath != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,13 +78,13 @@ class _SupportScreenState extends State<SupportScreen> {
         ),
       );
 
-      final Uri mailUrl = Uri(
+      final mailUrl = Uri(
         scheme: 'mailto',
         path: 'support@nordheim.online',
         queryParameters: {
           'subject': 'MyWay error logs for Support request',
           'body':
-              'Please describe your issue here.\\n\\n'
+              r'Please describe your issue here.\n\n'
               '[IMPORTANT: Do not forget to attach the MyWay_Logs.tar.gz file located at: $archivePath]',
         },
       );
@@ -107,7 +107,7 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -160,12 +160,18 @@ class _SupportScreenState extends State<SupportScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Recent Logs', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
+                      const Text(
+                        'Recent Logs',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal,
+                        ),
+                      ),
                       IconButton(
                         icon: const Icon(Icons.refresh, color: Colors.teal),
                         onPressed: _refreshLogs,
                         tooltip: 'Refresh Logs',
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -181,7 +187,11 @@ class _SupportScreenState extends State<SupportScreen> {
                       child: SingleChildScrollView(
                         child: Text(
                           _logContent,
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ),

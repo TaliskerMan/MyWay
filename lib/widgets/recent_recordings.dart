@@ -1,7 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:myway/services/settings_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../services/settings_service.dart';
 
 /// A UI widget displaying lists of recently recorded video files.
 ///
@@ -111,9 +112,9 @@ class _RecentRecordingsState extends State<RecentRecordings> {
     final currentName = file.path.split('/').last;
     final extension = currentName.substring(currentName.lastIndexOf('.'));
     final baseName = currentName.substring(0, currentName.lastIndexOf('.'));
-    
+
     final controller = TextEditingController(text: baseName);
-    
+
     final newName = await showDialog<String>(
       context: context,
       builder: (context) {
@@ -130,19 +131,22 @@ class _RecentRecordingsState extends State<RecentRecordings> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(null),
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-              child: const Text('Rename', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Rename',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
       },
     );
-    
+
     if (newName != null && newName.trim().isNotEmpty && newName != baseName) {
       final newPath = '${file.parent.path}/${newName.trim()}$extension';
       try {

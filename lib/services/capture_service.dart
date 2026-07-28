@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
-import '../models/recording_params.dart';
+import 'package:myway/models/recording_params.dart';
 
 /// FFI structural layout mapping the native C-based capture parameter configuration.
 final class MyWayCaptureParamsStruct extends Struct {
@@ -80,12 +80,6 @@ typedef MyWayTeardown = void Function();
 
 /// Snapshot model holding metrics from the active recording session.
 class CaptureStatus {
-  /// Session duration recorded so far in seconds.
-  final int durationSec;
-
-  /// Current audio volume meter amplitude level.
-  final double vuLevel;
-
   /// Creates a [CaptureStatus] metric packet.
   ///
   /// Note: bitrate and dropped-frame counters were removed because they were
@@ -93,6 +87,12 @@ class CaptureStatus {
   /// pipeline did not actually provide. Re-add them only when wired to real
   /// values from the GStreamer pipeline.
   CaptureStatus(this.durationSec, this.vuLevel);
+
+  /// Session duration recorded so far in seconds.
+  final int durationSec;
+
+  /// Current audio volume meter amplitude level.
+  final double vuLevel;
 }
 
 /// Global stream controller to broadcast capture metric snapshots to the UI.
@@ -108,22 +108,6 @@ final audioMonitorStreamController = StreamController<double>.broadcast();
 /// Broadcasts telemetry updates, including recording duration and audio level indicators,
 /// using asynchronous streams.
 class CaptureService {
-  late DynamicLibrary _lib;
-  late MyWayInit _mywayInit;
-  late MyWayStartCapture _mywayStartCapture;
-  late MyWayStopCapture _mywayStopCapture;
-  late MyWayStartAudioMonitor _mywayStartAudioMonitor;
-  late MyWayStopAudioMonitor _mywayStopAudioMonitor;
-  late MyWayGetRecordingVu _mywayGetRecordingVu;
-  late MyWayGetRecordingDuration _mywayGetRecordingDuration;
-  late MyWayGetMonitorVu _mywayGetMonitorVu;
-  late MyWayTeardown _mywayTeardown;
-  late MyWaySetupFdExtraction _mywaySetupFdExtraction;
-  late MyWayReadExtractedFd _mywayReadExtractedFd;
-
-  Timer? _captureTimer;
-  Timer? _monitorTimer;
-
   /// Loads the shared object library and binds all capture methods.
   CaptureService() {
     try {
@@ -133,9 +117,10 @@ class CaptureService {
       // via the runner's $ORIGIN/lib rpath. A failure here means a packaging
       // problem; surface it clearly instead of an opaque FFI crash.
       throw StateError(
-          'MyWay: failed to load native capture library libmyway_capture.so. '
-          'Ensure it is installed alongside the app (rpath \$ORIGIN/lib). '
-          'Underlying error: $error');
+        'MyWay: failed to load native capture library libmyway_capture.so. '
+        r'Ensure it is installed alongside the app (rpath $ORIGIN/lib). '
+        'Underlying error: $error',
+      );
     }
     _mywayInit = _lib
         .lookup<NativeFunction<MyWayInitFunc>>('myway_init')
@@ -173,12 +158,31 @@ class CaptureService {
         .lookup<NativeFunction<MyWayTeardownFunc>>('myway_teardown')
         .asFunction();
     _mywaySetupFdExtraction = _lib
-        .lookup<NativeFunction<MyWaySetupFdExtractionFunc>>('myway_setup_fd_extraction')
+        .lookup<NativeFunction<MyWaySetupFdExtractionFunc>>(
+          'myway_setup_fd_extraction',
+        )
         .asFunction();
     _mywayReadExtractedFd = _lib
-        .lookup<NativeFunction<MyWayReadExtractedFdFunc>>('myway_read_extracted_fd')
+        .lookup<NativeFunction<MyWayReadExtractedFdFunc>>(
+          'myway_read_extracted_fd',
+        )
         .asFunction();
   }
+  late DynamicLibrary _lib;
+  late MyWayInit _mywayInit;
+  late MyWayStartCapture _mywayStartCapture;
+  late MyWayStopCapture _mywayStopCapture;
+  late MyWayStartAudioMonitor _mywayStartAudioMonitor;
+  late MyWayStopAudioMonitor _mywayStopAudioMonitor;
+  late MyWayGetRecordingVu _mywayGetRecordingVu;
+  late MyWayGetRecordingDuration _mywayGetRecordingDuration;
+  late MyWayGetMonitorVu _mywayGetMonitorVu;
+  late MyWayTeardown _mywayTeardown;
+  late MyWaySetupFdExtraction _mywaySetupFdExtraction;
+  late MyWayReadExtractedFd _mywayReadExtractedFd;
+
+  Timer? _captureTimer;
+  Timer? _monitorTimer;
 
   /// Initializes the native capturing backend.
   void initialize() {

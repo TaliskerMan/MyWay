@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../services/audio_service.dart';
-import '../services/capture_service.dart';
+import 'package:myway/services/audio_service.dart';
+import 'package:myway/services/capture_service.dart';
 
 /// A UI widget displaying a real-time audio input level decibel meter and source selection.
 class AudioMeter extends StatefulWidget {
-  /// Callback triggered when the active audio device selection changes.
-  final ValueChanged<AudioDevice?>? onDeviceChanged;
-
   /// Creates a new [AudioMeter] instance.
   const AudioMeter({super.key, this.onDeviceChanged});
+
+  /// Callback triggered when the active audio device selection changes.
+  final ValueChanged<AudioDevice?>? onDeviceChanged;
 
   @override
   State<AudioMeter> createState() => _AudioMeterState();
@@ -21,7 +21,7 @@ class _AudioMeterState extends State<AudioMeter> {
 
   List<AudioDevice> _devices = [];
   AudioDevice? _selectedDevice;
-  double _level = 0.0;
+  double _level = 0;
   StreamSubscription? _subscription;
   bool _loading = true;
 

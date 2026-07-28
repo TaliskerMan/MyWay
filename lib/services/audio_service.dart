@@ -12,14 +12,14 @@ final class MyWayAudioDeviceStruct extends Struct {
 
 /// Represents a system audio recording hardware interface or PipeWire device.
 class AudioDevice {
+  /// Creates an [AudioDevice] representation with [id] and [name].
+  AudioDevice(this.id, this.name);
+
   /// Unique identifier of the device mapped from the underlying capture engine.
   final int id;
 
   /// User-friendly label or name of the audio device.
   final String name;
-
-  /// Creates an [AudioDevice] representation with [id] and [name].
-  AudioDevice(this.id, this.name);
 }
 
 typedef MyWayGetAudioDevicesFunc =
@@ -33,10 +33,6 @@ typedef MyWayFreeAudioDevices = void Function(Pointer<MyWayAudioDeviceStruct>);
 
 /// Service layer wrapping the PipeWire/PulseAudio C bindings to query local audio input nodes.
 class AudioService {
-  late DynamicLibrary _lib;
-  late MyWayGetAudioDevices _getAudioDevices;
-  late MyWayFreeAudioDevices _freeAudioDevices;
-
   /// Loads the native library and registers FFI functions for listing system audio devices.
   AudioService() {
     _lib = DynamicLibrary.open('libmyway_capture.so');
@@ -51,6 +47,9 @@ class AudioService {
         )
         .asFunction();
   }
+  late DynamicLibrary _lib;
+  late MyWayGetAudioDevices _getAudioDevices;
+  late MyWayFreeAudioDevices _freeAudioDevices;
 
   /// Returns a list of all detected hardware and virtual [AudioDevice] endpoints.
   ///
@@ -61,7 +60,7 @@ class AudioService {
     final devicesPtr = _getAudioDevices(countPtr);
     final count = countPtr.value;
 
-    final List<AudioDevice> devices = [];
+    final devices = <AudioDevice>[];
     if (devicesPtr != nullptr) {
       for (var index = 0; index < count; index++) {
         final ref = (devicesPtr + index).ref;

@@ -1,16 +1,17 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+
 import 'package:dbus/dbus.dart';
-import 'capture_service.dart';
-import 'log_service.dart';
+import 'package:myway/services/capture_service.dart';
+import 'package:myway/services/log_service.dart';
 
 /// Builds a per-user, unpredictable path for the FD hand-off UNIX socket.
 ///
 /// Prefers `XDG_RUNTIME_DIR` (per-user, mode 0700); falls back to
 /// `/run/user/<uid>` and finally `/tmp` only if neither is available.
 String _fdSocketPath() {
-  String? base = Platform.environment['XDG_RUNTIME_DIR'];
+  var base = Platform.environment['XDG_RUNTIME_DIR'];
   if (base == null || base.isEmpty) {
     final uid = Platform.environment['UID'];
     final candidate = uid != null ? '/run/user/$uid' : null;
@@ -21,16 +22,18 @@ String _fdSocketPath() {
     }
   }
   final rnd = Random.secure();
-  final token =
-      List.generate(16, (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+  final token = List.generate(
+    16,
+    (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
   return '$base/myway_fd_${pid}_$token.sock';
 }
 
 /// Struct holding the returned PipeWire stream node ID and extracted file descriptor.
 class PortalResult {
+  PortalResult(this.nodeId, this.fd);
   final int nodeId;
   final int fd;
-  PortalResult(this.nodeId, this.fd);
 }
 
 /// Service coordinating DBus Desktop Portals for Wayland screen captures.
@@ -89,12 +92,12 @@ class PortalService {
           } else {
             completer.completeError(
               Exception(
-                "Portal request failed or cancelled by user (code: $responseCode)",
+                'Portal request failed or cancelled by user (code: $responseCode)',
               ),
             );
           }
         } else {
-          completer.completeError(Exception("Malformed portal response"));
+          completer.completeError(Exception('Malformed portal response'));
         }
         sub?.cancel();
       },
@@ -140,10 +143,11 @@ class PortalService {
     // the portal call.
     if (!await isScreenCastPortalAvailable()) {
       throw Exception(
-          'Screen recording requires xdg-desktop-portal with a ScreenCast '
-          'backend (e.g. xdg-desktop-portal-gnome) on a Wayland session. It '
-          'does not appear to be available here. On X11, use window/area '
-          'capture instead of full-screen portal capture.');
+        'Screen recording requires xdg-desktop-portal with a ScreenCast '
+        'backend (e.g. xdg-desktop-portal-gnome) on a Wayland session. It '
+        'does not appear to be available here. On X11, use window/area '
+        'capture instead of full-screen portal capture.',
+      );
     }
 
     final portalObj = DBusRemoteObject(
@@ -168,11 +172,15 @@ class PortalService {
     }
 
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final senderName = _client.uniqueName.replaceFirst(':', '').replaceAll('.', '_');
+    final senderName = _client.uniqueName
+        .replaceFirst(':', '')
+        .replaceAll('.', '_');
 
     // Step 1: Create Session
     final sessionToken = 'myway_session_$timestamp';
-    final createRequestPath = DBusObjectPath('/org/freedesktop/portal/desktop/request/$senderName/$sessionToken');
+    final createRequestPath = DBusObjectPath(
+      '/org/freedesktop/portal/desktop/request/$senderName/$sessionToken',
+    );
     final createResponseFuture = _waitForResponse(createRequestPath);
 
     await portalObj.callMethod(
@@ -191,15 +199,17 @@ class PortalService {
     final sessionHandleVal = createResults['session_handle'];
     if (sessionHandleVal == null || sessionHandleVal is! DBusString) {
       throw Exception(
-        "Failed to retrieve session handle from ScreenCast portal",
+        'Failed to retrieve session handle from ScreenCast portal',
       );
     }
     final sessionHandle = sessionHandleVal.value;
-    LogService().logInfo("MyWay Portal: Created Session: $sessionHandle");
+    LogService().logInfo('MyWay Portal: Created Session: $sessionHandle');
 
     // Step 2: Select Sources
     final selectToken = 'myway_select_$timestamp';
-    final selectRequestPath = DBusObjectPath('/org/freedesktop/portal/desktop/request/$senderName/$selectToken');
+    final selectRequestPath = DBusObjectPath(
+      '/org/freedesktop/portal/desktop/request/$senderName/$selectToken',
+    );
     final selectResponseFuture = _waitForResponse(selectRequestPath);
 
     await portalObj.callMethod(
@@ -208,9 +218,9 @@ class PortalService {
       [
         DBusObjectPath(sessionHandle),
         DBusDict.stringVariant({
-          'types': DBusUint32(3), // 1 = Screen, 2 = Window, 3 = Both
-          'multiple': DBusBoolean(false),
-          'cursor_mode': DBusUint32(2), // 2 = Embedded cursor
+          'types': const DBusUint32(3), // 1 = Screen, 2 = Window, 3 = Both
+          'multiple': const DBusBoolean(false),
+          'cursor_mode': const DBusUint32(2), // 2 = Embedded cursor
           'handle_token': DBusString(selectToken),
         }),
       ],
@@ -218,11 +228,13 @@ class PortalService {
     );
 
     await selectResponseFuture;
-    LogService().logInfo("MyWay Portal: Sources selected successfully");
+    LogService().logInfo('MyWay Portal: Sources selected successfully');
 
     // Step 3: Start Session
     final startToken = 'myway_start_$timestamp';
-    final startRequestPath = DBusObjectPath('/org/freedesktop/portal/desktop/request/$senderName/$startToken');
+    final startRequestPath = DBusObjectPath(
+      '/org/freedesktop/portal/desktop/request/$senderName/$startToken',
+    );
     final startResponseFuture = _waitForResponse(startRequestPath);
 
     await portalObj.callMethod(
@@ -230,7 +242,7 @@ class PortalService {
       'Start',
       [
         DBusObjectPath(sessionHandle),
-        DBusString(''), // parent_window (none)
+        const DBusString(''), // parent_window (none)
         DBusDict.stringVariant({'handle_token': DBusString(startToken)}),
       ],
       replySignature: DBusSignature('o'),
@@ -240,19 +252,19 @@ class PortalService {
 
     final streamsVal = startResults['streams'];
     if (streamsVal == null || streamsVal is! DBusArray) {
-      throw Exception("No streams returned by ScreenCast portal");
+      throw Exception('No streams returned by ScreenCast portal');
     }
 
     final streamsArray = streamsVal.children;
     if (streamsArray.isEmpty) {
-      throw Exception("ScreenCast portal returned an empty list of streams");
+      throw Exception('ScreenCast portal returned an empty list of streams');
     }
 
     // A stream structure is (uint32 stream_id, dict properties)
     final firstStream = streamsArray.first as DBusStruct;
     final nodeId = (firstStream.children[0] as DBusUint32).value;
     LogService().logInfo(
-      "MyWay Portal: Obtained PipeWire Video Node ID: $nodeId",
+      'MyWay Portal: Obtained PipeWire Video Node ID: $nodeId',
     );
 
     // Step 4: Open PipeWire Remote to get the file descriptor
@@ -275,33 +287,35 @@ class PortalService {
     final sockPath = _fdSocketPath();
     CaptureService().setupFdExtraction(sockPath);
 
-    int fd = -1;
+    var fd = -1;
     try {
       final socket = await RawSocket.connect(
-        InternetAddress(sockPath, type: InternetAddressType.unix), 
-        0
+        InternetAddress(sockPath, type: InternetAddressType.unix),
+        0,
       );
       final controlMessage = SocketControlMessage.fromHandles([dbusFd.handle]);
       socket.sendMessage([controlMessage], [1]);
       await socket.close();
 
       fd = CaptureService().readExtractedFd();
-      LogService().logInfo("MyWay Portal: Successfully extracted PipeWire FD: $fd via SCM_RIGHTS");
+      LogService().logInfo(
+        'MyWay Portal: Successfully extracted PipeWire FD: $fd via SCM_RIGHTS',
+      );
     } catch (error) {
-      LogService().logError("MyWay Portal: Failed to extract FD: $error");
+      LogService().logError('MyWay Portal: Failed to extract FD: $error');
     }
 
     if (fd == -1) {
-       LogService().logError("MyWay Portal: Extracted FD was -1!");
+      LogService().logError('MyWay Portal: Extracted FD was -1!');
     }
 
-    // Keep a reference to the response so the DBusUnixFd isn't garbage collected 
+    // Keep a reference to the response so the DBusUnixFd isn't garbage collected
     // and its ResourceHandle isn't closed before we start the capture
     _lastFdResponse = fdResponse;
 
     return PortalResult(nodeId, fd);
   }
-  
+
   /// Reference holding the last DBus descriptor response to prevent early garbage collection.
   // ignore: unused_field
   dynamic _lastFdResponse;

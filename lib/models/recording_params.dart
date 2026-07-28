@@ -1,5 +1,21 @@
 /// Configuration parameters required to initialize a screen and audio capture session.
 class RecordingParams {
+  /// Creates a [RecordingParams] configuration instance.
+  RecordingParams({
+    required this.mode,
+    required this.codec,
+    required this.videoBitrate,
+    required this.videoNodeId,
+    required this.audioNodeId,
+    required this.outputPath,
+    required this.isWayland,
+    this.waylandFd = 0,
+    this.areaX = 0,
+    this.areaY = 0,
+    this.areaWidth = 0,
+    this.areaHeight = 0,
+  });
+
   /// The capture mode: "fullscreen", "window", or "area".
   final String mode;
 
@@ -36,20 +52,4 @@ class RecordingParams {
   /// Whether the session runs on a Wayland display server (requires PipeWire)
   /// rather than X11 (uses ximagesrc).
   final bool isWayland;
-
-  /// Creates a [RecordingParams] configuration instance.
-  RecordingParams({
-    required this.mode,
-    required this.codec,
-    required this.videoBitrate,
-    required this.videoNodeId,
-    required this.audioNodeId,
-    required this.outputPath,
-    required this.isWayland,
-    this.waylandFd = 0,
-    this.areaX = 0,
-    this.areaY = 0,
-    this.areaWidth = 0,
-    this.areaHeight = 0,
-  });
 }
