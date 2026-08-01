@@ -90,3 +90,4 @@ bin/
 
 # ---- macOS cruft ----
 .DS_Store
+sonar-project.properties
