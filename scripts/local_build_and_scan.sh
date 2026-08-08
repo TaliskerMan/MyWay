@@ -105,11 +105,27 @@ DEB_PATH="build/dist/myway.deb"
 FINAL_DEB_PATH="$PUBLISH_DIR/${APP_NAME}_v${NEW_VERSION_FULL}.deb"
 cp "$DEB_PATH" "$FINAL_DEB_PATH"
 
-# 4. Generate SBOM (Syft)
 echo "=> Generating CycloneDX SBOM with Syft..."
-SBOM_PATH="$PUBLISH_DIR/myway-sbom.cdx.json"
+mkdir -p Audit
+SBOM_PATH="Audit/SBOM-Linux.json"
 if command -v syft > /dev/null 2>&1; then
-    syft packages dir:. --output cyclonedx-json="$SBOM_PATH"
+    syft dir:. \
+        --exclude ./venv \
+        --exclude ./android \
+        --exclude ./ios \
+        --exclude ./macos \
+        --exclude ./windows \
+        --exclude ./build \
+        --exclude ./packaging_output \
+        --exclude ./dist \
+        --exclude ./plan \
+        --exclude ./.dart_tool \
+        -o cyclonedx-json > "$SBOM_PATH"
+    cp "$SBOM_PATH" Audit/SBOM-Linux
+    cp "$SBOM_PATH" Audit/sbom.json
+    cp "$SBOM_PATH" "$PUBLISH_DIR/SBOM-Linux.json"
+    cp "$SBOM_PATH" "$PUBLISH_DIR/SBOM-Linux"
+    cp "$SBOM_PATH" "$PUBLISH_DIR/myway-sbom.cdx.json"
 else
     echo "Warning: syft not found - SBOM NOT generated!"
     touch "$SBOM_PATH"

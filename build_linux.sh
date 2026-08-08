@@ -63,6 +63,33 @@ echo "==> Building Flutter Linux release..."
 cd "${SCRIPT_DIR}"
 "${FLUTTER}" build linux --release
 
+echo "==> Generating SBOM via Syft..."
+SYFT_BIN="syft"
+if ! command -v syft &> /dev/null; then
+    if [ -f "${HOME}/.local/bin/syft" ]; then
+        SYFT_BIN="${HOME}/.local/bin/syft"
+    elif [ -f "./syft" ]; then
+        SYFT_BIN="./syft"
+    fi
+fi
+if command -v "${SYFT_BIN}" &> /dev/null; then
+    mkdir -p "${SCRIPT_DIR}/Audit"
+    "${SYFT_BIN}" dir:. \
+        --exclude ./venv \
+        --exclude ./android \
+        --exclude ./ios \
+        --exclude ./macos \
+        --exclude ./windows \
+        --exclude ./build \
+        --exclude ./packaging_output \
+        --exclude ./dist \
+        --exclude ./plan \
+        --exclude ./.dart_tool \
+        -o cyclonedx-json > "${SCRIPT_DIR}/Audit/SBOM-Linux.json"
+    cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${SCRIPT_DIR}/Audit/SBOM-Linux"
+    cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${SCRIPT_DIR}/Audit/sbom.json"
+fi
+
 echo "==> Preparing DEB package structure..."
 rm -rf "${DEB_ROOT}"
 mkdir -p "${DEB_ROOT}/DEBIAN"
@@ -144,6 +171,8 @@ cp "${ARTIFACTS}/"* "${NOBUILDS_DIR}/"
 # Copy license, readme, sbom, and generate source code archive
 cp "${SCRIPT_DIR}/LICENSE" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/README.md" "${NOBUILDS_DIR}/" || true
+cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${NOBUILDS_DIR}/" || true
+cp "${SCRIPT_DIR}/Audit/SBOM-Linux" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/Audit/sbom.json" "${NOBUILDS_DIR}/" || true
 tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=packaging/linux_build -czf "${NOBUILDS_DIR}/myway_source.tar.gz" -C "${SCRIPT_DIR}" .
 
