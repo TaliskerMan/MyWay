@@ -114,7 +114,6 @@ if command -v syft > /dev/null 2>&1; then
         --exclude ./android \
         --exclude ./ios \
         --exclude ./macos \
-        --exclude ./windows \
         --exclude ./build \
         --exclude ./packaging_output \
         --exclude ./dist \
