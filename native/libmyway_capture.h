@@ -26,6 +26,7 @@ typedef struct {
     int area_height;
     int is_wayland; // 1 for Wayland (PipeWire), 0 for X11 (ximagesrc)
     int wayland_fd;
+    int max_height; // 0 = record at source resolution; otherwise scale DOWN to at most this height
 } MyWayCaptureParams;
 
 // Initializes portal and PipeWire
@@ -52,6 +53,9 @@ int myway_stop_audio_monitor(void);
 // Getters for polling from Dart FFI
 double myway_get_recording_vu(void);
 int myway_get_recording_duration(void);
+// 1 while a recording is running; 0 once it has stopped, including when the
+// pipeline stopped by itself because of an error.
+int myway_is_recording(void);
 double myway_get_monitor_vu(void);
 
 // Frees all resources

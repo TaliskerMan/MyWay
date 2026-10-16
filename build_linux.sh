@@ -137,11 +137,13 @@ Version: ${VERSION}-${BUILD_SUFFIX}
 Architecture: ${ARCH}
 Maintainer: Chuck Talk <chuck@nordheim.online>
 Priority: optional
-Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-pipewire, pipewire, xdg-desktop-portal
+Depends: libgtk-3-0, libgstreamer1.0-0 (>= 1.22), gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-pipewire, pipewire, xdg-desktop-portal (>= 1.12), x11-utils
+Recommends: xdg-desktop-portal-gnome
 Installed-Size: ${INSTALLED_SIZE}
 Description: Screen and Audio Capture utility for Linux
- MyWay allows users to record their screen and audio seamlessly
- using modern Wayland and PipeWire technologies.
+ Records the full screen or a single window, with audio, to MP4
+ (H.264, H.265 or AV1) using GStreamer, PipeWire and the Wayland
+ screen-sharing portal. Encoding is done in software.
 CONTROL
 
 echo "==> Building .deb package..."
@@ -149,7 +151,8 @@ DEB_FILE="${ARTIFACTS}/${PKG_NAME}_${VERSION}-${BUILD_SUFFIX}_${ARCH}.deb"
 dpkg-deb --build --root-owner-group "${DEB_ROOT}" "${DEB_FILE}"
 
 echo "==> Generating SHA512 hash..."
-sha512sum "${DEB_FILE}" | awk '{print $1}' > "${DEB_FILE}.sha512"
+# Standard "<hash>  <filename>" format so users can run: sha512sum -c <file>.sha512
+(cd "$(dirname "${DEB_FILE}")" && sha512sum "$(basename "${DEB_FILE}")" > "$(basename "${DEB_FILE}").sha512")
 
 echo "==> Signing .deb with GPG..."
 if command -v gpg > /dev/null 2>&1; then

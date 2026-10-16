@@ -10,19 +10,16 @@ class RecordingParams {
     required this.outputPath,
     required this.isWayland,
     this.waylandFd = 0,
-    this.areaX = 0,
-    this.areaY = 0,
-    this.areaWidth = 0,
-    this.areaHeight = 0,
+    this.maxHeight = 0,
   });
 
-  /// The capture mode: "fullscreen", "window", or "area".
+  /// The capture mode: "fullscreen" or "window".
   final String mode;
 
   /// The video encoding codec: "h265", "h264", or "av1".
   final String codec;
 
-  /// Target video encoding bitrate in bps.
+  /// Target video encoding bitrate in kbps.
   final int videoBitrate;
 
   /// The PipeWire stream node ID for Wayland video capture.
@@ -37,19 +34,11 @@ class RecordingParams {
   /// The absolute output destination path for the recorded media file.
   final String outputPath;
 
-  /// Horizontal coordinate offset of the custom capture area bounding box.
-  final int areaX;
-
-  /// Vertical coordinate offset of the custom capture area bounding box.
-  final int areaY;
-
-  /// Width dimension of the custom capture area bounding box.
-  final int areaWidth;
-
-  /// Height dimension of the custom capture area bounding box.
-  final int areaHeight;
-
   /// Whether the session runs on a Wayland display server (requires PipeWire)
   /// rather than X11 (uses ximagesrc).
   final bool isWayland;
+
+  /// Largest output height in pixels; 0 records at the source resolution.
+  /// The video is only ever scaled down, never up.
+  final int maxHeight;
 }

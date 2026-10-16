@@ -145,8 +145,7 @@ class PortalService {
       throw Exception(
         'Screen recording requires xdg-desktop-portal with a ScreenCast '
         'backend (e.g. xdg-desktop-portal-gnome) on a Wayland session. It '
-        'does not appear to be available here. On X11, use window/area '
-        'capture instead of full-screen portal capture.',
+        'does not appear to be available here.',
       );
     }
 
@@ -314,6 +313,91 @@ class PortalService {
     _lastFdResponse = fdResponse;
 
     return PortalResult(nodeId, fd);
+  }
+
+  /// Asks the desktop's file-chooser portal for a folder.
+  ///
+  /// Uses org.freedesktop.portal.FileChooser.OpenFile with `directory: true`
+  /// (FileChooser version 3+, xdg-desktop-portal 1.12+). Returns the chosen
+  /// folder's path, or null if the user cancelled. Throws if no file-chooser
+  /// portal is available.
+  Future<String?> pickFolder({String title = 'Choose Output Folder'}) async {
+    final portalObj = DBusRemoteObject(
+      _client,
+      name: 'org.freedesktop.portal.Desktop',
+      path: DBusObjectPath('/org/freedesktop/portal/desktop'),
+    );
+
+    final version = await portalObj.getProperty(
+      'org.freedesktop.portal.FileChooser',
+      'version',
+      signature: DBusSignature('u'),
+    );
+    if (version is! DBusUint32 || version.value < 3) {
+      throw Exception(
+        'Your desktop\'s file-chooser portal is too old to choose folders '
+        '(needs xdg-desktop-portal 1.12 or newer).',
+      );
+    }
+
+    if (_client.uniqueName.isEmpty) {
+      final dbusObj = DBusRemoteObject(
+        _client,
+        name: 'org.freedesktop.DBus',
+        path: DBusObjectPath('/org/freedesktop/DBus'),
+      );
+      await dbusObj.callMethod(
+        'org.freedesktop.DBus',
+        'GetId',
+        [],
+        replySignature: DBusSignature('s'),
+      );
+    }
+    final senderName = _client.uniqueName
+        .replaceFirst(':', '')
+        .replaceAll('.', '_');
+    final token = 'myway_folder_${DateTime.now().millisecondsSinceEpoch}';
+    final requestPath = DBusObjectPath(
+      '/org/freedesktop/portal/desktop/request/$senderName/$token',
+    );
+    final responseFuture = _waitForResponse(requestPath);
+
+    await portalObj.callMethod(
+      'org.freedesktop.portal.FileChooser',
+      'OpenFile',
+      [
+        const DBusString(''), // parent_window (none)
+        DBusString(title),
+        DBusDict.stringVariant({
+          'handle_token': DBusString(token),
+          'directory': const DBusBoolean(true),
+          'multiple': const DBusBoolean(false),
+          'modal': const DBusBoolean(true),
+          'accept_label': const DBusString('Select'),
+        }),
+      ],
+      replySignature: DBusSignature('o'),
+    );
+
+    final Map<String, DBusValue> results;
+    try {
+      results = await responseFuture;
+    } catch (_) {
+      return null; // cancelled or dismissed
+    }
+    final uris = results['uris'];
+    if (uris is! DBusArray || uris.children.isEmpty) return null;
+    final first = uris.children.first;
+    if (first is! DBusString) return null;
+    return folderPathFromUri(first.value);
+  }
+
+  /// Converts a `file://` URI from the portal to a local path, or null for
+  /// any other kind of URI. Pure, for testing.
+  static String? folderPathFromUri(String uri) {
+    final parsed = Uri.tryParse(uri);
+    if (parsed == null || parsed.scheme != 'file') return null;
+    return parsed.toFilePath();
   }
 
   /// Reference holding the last DBus descriptor response to prevent early garbage collection.

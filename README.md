@@ -2,16 +2,17 @@
 
 ![MyWay Logo](assets/myway.png)
 
-MyWay is a premium, secure, native Linux Screen Recorder specifically designed for GNOME and Wayland. Built with Flutter and a native C/GStreamer backend, MyWay offers an intuitive, hardware-accelerated screen capturing experience while adhering strictly to the **ShadowAgent** principles of "first, do no harm".
+MyWay is a native Linux screen recorder designed for GNOME on Wayland. Built with Flutter and a native C/GStreamer backend, it records your full screen or a single window, with audio, to an MP4 file on your computer, following Nordheim Online's principle of "first, do no harm".
 
-MyWay emphasizes user privacy and localized control. We guarantee zero automatic telemetry and provide an offline-first architecture that strictly utilizes standard XDG Desktop Portals to securely interface with PipeWire.
+MyWay has no telemetry and makes no network connections. On Wayland it uses the standard XDG Desktop Portal, so the desktop asks your permission before MyWay can see your screen.
 
 ## Features
 - **Wayland Native**: Designed specifically for modern GNOME on Wayland environments.
-- **Hardware Acceleration**: Utilizes GStreamer and PipeWire for high-performance capturing.
-- **Dynamic Capture Modes**: Record your full screen, specific windows, or custom rectangular areas.
+- **Capture Modes**: Record your full screen or a single window.
 - **Audio Integration**: Visual VU meter and dropdown audio device selection.
-- **High Quality Export**: Configurable resolutions (720p, 1080p, 2160p) using modern h264/h265 codecs.
+- **Codecs**: H.264 (default, plays everywhere), H.265, or AV1 (needs the GStreamer SVT-AV1 encoder, `svtav1enc`). Encoding is done in software on the CPU (x264, x265, SVT-AV1); there is no hardware (GPU) encoding.
+- **Quality**: Record at your screen's own resolution, or scale down to at most 720p, 1080p or 2160p. MyWay never scales up.
+- **Bitrate**: 2 to 80 Mbps (default 20).
 - **Zero Telemetry**: All logs and recordings stay on your machine. You control your data.
 
 ## Installation
@@ -25,19 +26,26 @@ MyWay is distributed as a cryptographically signed Debian (`.deb`) package for s
    ```
 3. MyWay will now be available in your application launcher!
 
-*Note: MyWay requires `libgstreamer1.0-0`, `gstreamer1.0-plugins-good`, and `libpipewire-0.3-0`.*
+`apt` installs what MyWay needs: GStreamer 1.22+ with the base, good, bad and ugly plug-in sets, PipeWire, and `xdg-desktop-portal` (plus `xdg-desktop-portal-gnome`, recommended).
+
+To verify a download first:
+```bash
+sha512sum -c myway_<version>_amd64.deb.sha512
+gpg --import chuck_pubkey.asc
+gpg --verify myway_<version>_amd64.deb.asc myway_<version>_amd64.deb
+```
 
 ## Usage
 
 1. **Launch the Application**: Open MyWay from your GNOME app drawer.
-2. **Select Recording Mode**: On the main screen, choose to record your Full Screen, a specific Window, or a selected Area.
-3. **Configure Audio**: Select your preferred audio input source from the dropdown below the volume meter.
+2. **Configure Audio**: In the **Audio** section, pick your audio input; the level meter shows it is picking up sound.
+3. **Select Recording Mode**: In the **Record** section, choose **Full Screen** or **Window**.
 4. **Record**: Press the prominent **Record** button. The Wayland screen-sharing portal will prompt you to grant MyWay permission to view your screen (a security feature of Wayland).
 5. **Stop**: Once finished, press **Stop**. The video will automatically be saved to your configured output folder.
 
 ## Saving Videos & Hosting
 
-By default, MyWay saves all `.mkv` recordings directly into your `~/Videos` directory. You can easily change this target directory by navigating to the **Settings** tab.
+By default, MyWay saves recordings as MP4 files named `myway_rec_<timestamp>.mp4` in your `~/Videos` folder. To use a different folder, open **Settings** and click the folder button next to **Output Folder**; your desktop's folder chooser opens. The reset button returns it to `~/Videos`.
 
 **Online Hosting**: Once your videos are created and saved locally, they can be uploaded and hosted online at no charge using platforms such as YouTube, Vimeo, or natively shared on social media, making it incredibly simple to build demo videos and tutorials.
 
@@ -53,7 +61,9 @@ If you run into issues while capturing or saving videos, MyWay includes a built-
 6. Your default email client will open. Simply attach the generated `.tar.gz` file and send the email to `support@nordheim.online`.
 
 ### Common Issues
-- **App fails to capture screen**: Ensure you are running on a Wayland session. X11 sessions may require a different capturing backend.
+- **App fails to capture screen**: On Wayland, make sure `xdg-desktop-portal` and `xdg-desktop-portal-gnome` are installed. On X11, MyWay records directly through X11 instead, and you click the window you want to record.
+- **AV1 recording won't start**: Install the GStreamer SVT-AV1 plug-in, or choose H.264 in Settings.
+- **"Recording stopped unexpectedly"**: The recording pipeline hit an error (for example, the disk filled up). Turn on debug logging in **Support** and try again to see why.
 - **No Audio**: Check your system settings to ensure your microphone is not muted at the OS level. Verify the correct device is selected in the MyWay dropdown.
 
 ## License

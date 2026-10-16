@@ -28,14 +28,6 @@ static double current_monitor_vu = 0.0;
 static char audio_device_strings[256][256];
 static int audio_device_count = 0;
 
-// Struct to pass to the crop pad probe
-typedef struct {
-    int area_x;
-    int area_y;
-    int area_width;
-    int area_height;
-    GstElement *crop_el;
-} CropProbeData;
 
 int myway_init(void) {
     GError *error = NULL;
@@ -130,40 +122,6 @@ void myway_free_audio_devices(MyWayAudioDevice* devices) {
     if (devices) {
         free(devices);
     }
-}
-
-// Pad probe callback to calculate and apply crop margins dynamically
-static GstPadProbeReturn
-crop_pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
-    CropProbeData *data = (CropProbeData *)user_data;
-    GstCaps *caps = gst_pad_get_current_caps(pad);
-    if (caps) {
-        GstStructure *s = gst_caps_get_structure(caps, 0);
-        int width = 0, height = 0;
-        if (gst_structure_get_int(s, "width", &width) && gst_structure_get_int(s, "height", &height)) {
-            int left = data->area_x;
-            int top = data->area_y;
-            int right = width - (left + data->area_width);
-            int bottom = height - (top + data->area_height);
-            
-            // Boundary checks
-            if (left < 0) left = 0;
-            if (top < 0) top = 0;
-            if (right < 0) right = 0;
-            if (bottom < 0) bottom = 0;
-            
-            g_object_set(data->crop_el,
-                         "left", left,
-                         "top", top,
-                         "right", right,
-                         "bottom", bottom,
-                         NULL);
-            printf("MyWay Crop: Applied left=%d, top=%d, right=%d, bottom=%d (Source resolution: %dx%d)\n",
-                   left, top, right, bottom, width, height);
-        }
-        gst_caps_unref(caps);
-    }
-    return GST_PAD_PROBE_REMOVE; // Remove probe after the first buffer
 }
 
 // Background thread loop to monitor GStreamer recording bus messages
@@ -261,9 +219,103 @@ recording_bus_thread(gpointer data) {
     return NULL;
 }
 
+// Works out the recorded frame size from the source size.
+//  - Non-square source pixels are converted to square ones.
+//  - max_height > 0 scales DOWN (keeping the aspect ratio) to at most that
+//    height; a source that is already that small is left alone (never upscaled).
+//  - Both sides are rounded down to even numbers: the SVT-AV1 encoder refuses
+//    odd sizes, which window captures and downscaling often produce.
+static void
+compute_output_size(int src_w, int src_h, int par_n, int par_d, int max_height,
+                    int *out_w, int *out_h) {
+    if (par_n <= 0 || par_d <= 0) { par_n = 1; par_d = 1; }
+    double w = (double)src_w * par_n / par_d;
+    double h = (double)src_h;
+    if (max_height > 0 && h > max_height) {
+        w = w * max_height / h;
+        h = max_height;
+    }
+    int ow = (int)(w + 0.5);
+    int oh = (int)(h + 0.5);
+    ow &= ~1;
+    oh &= ~1;
+    if (ow < 2) ow = 2;
+    if (oh < 2) oh = 2;
+    *out_w = ow;
+    *out_h = oh;
+}
+
+typedef struct {
+    GstElement *capsfilter;
+    int max_height;
+} SizeProbeData;
+
+static void
+size_probe_data_free(gpointer p) {
+    SizeProbeData *d = p;
+    if (d->capsfilter) gst_object_unref(d->capsfilter);
+    g_free(d);
+}
+
+// Runs on each new source format (including a window being resized) before
+// videoscale sees it, and fixes the size videoscale must produce.
+static GstPadProbeReturn
+size_caps_probe_cb(GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
+    (void)pad;
+    SizeProbeData *d = user_data;
+    GstEvent *ev = GST_PAD_PROBE_INFO_EVENT(info);
+    if (!ev || GST_EVENT_TYPE(ev) != GST_EVENT_CAPS) return GST_PAD_PROBE_OK;
+
+    GstCaps *caps = NULL;
+    gst_event_parse_caps(ev, &caps);
+    if (!caps || gst_caps_get_size(caps) < 1) return GST_PAD_PROBE_OK;
+    const GstStructure *s = gst_caps_get_structure(caps, 0);
+    int w = 0, h = 0, par_n = 1, par_d = 1;
+    if (!gst_structure_get_int(s, "width", &w) || !gst_structure_get_int(s, "height", &h) ||
+        w < 2 || h < 2) {
+        return GST_PAD_PROBE_OK;
+    }
+    gst_structure_get_fraction(s, "pixel-aspect-ratio", &par_n, &par_d);
+
+    int ow = 0, oh = 0;
+    compute_output_size(w, h, par_n, par_d, d->max_height, &ow, &oh);
+    printf("MyWay: source %dx%d -> recording %dx%d\n", w, h, ow, oh);
+
+    GstCaps *out = gst_caps_new_simple("video/x-raw",
+                                       "width", G_TYPE_INT, ow,
+                                       "height", G_TYPE_INT, oh,
+                                       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+                                       NULL);
+    g_object_set(G_OBJECT(d->capsfilter), "caps", out, NULL);
+    gst_caps_unref(out);
+    return GST_PAD_PROBE_OK;
+}
+
+// Hooks the size probe onto the "scaler"/"sizecaps" pair in a parsed pipeline.
+static int
+attach_size_control(GstElement *pipe, int max_height) {
+    GstElement *scaler = gst_bin_get_by_name(GST_BIN(pipe), "scaler");
+    GstElement *sizecaps = gst_bin_get_by_name(GST_BIN(pipe), "sizecaps");
+    if (!scaler || !sizecaps) {
+        fprintf(stderr, "MyWay: size-control elements not found in pipeline\n");
+        if (scaler) gst_object_unref(scaler);
+        if (sizecaps) gst_object_unref(sizecaps);
+        return -1;
+    }
+    GstPad *sinkpad = gst_element_get_static_pad(scaler, "sink");
+    SizeProbeData *d = g_new0(SizeProbeData, 1);
+    d->capsfilter = sizecaps;           // reference handed to the probe data
+    d->max_height = max_height;
+    gst_pad_add_probe(sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+                      size_caps_probe_cb, d, size_probe_data_free);
+    gst_object_unref(sinkpad);
+    gst_object_unref(scaler);
+    return 0;
+}
+
 // Starts a capture session
 int myway_start_capture(const MyWayCaptureParams* params) {
-    if (is_recording) {
+    if (is_recording || pipeline) {
         myway_stop_capture();
     }
     
@@ -278,23 +330,28 @@ int myway_start_capture(const MyWayCaptureParams* params) {
         encoder_desc = "x265enc bitrate=%d speed-preset=ultrafast tune=zerolatency";
         parser_desc = "h265parse";
     } else if (strcmp(params->codec, "av1") == 0) {
-        encoder_desc = "svtav1enc bitrate=%d preset=12";
+        // gst-plugins-bad svtav1enc (GStreamer 1.22+) takes target-bitrate in kbps.
+        // It has no "bitrate" property; using one made every AV1 recording fail.
+        encoder_desc = "svtav1enc target-bitrate=%d preset=12";
         parser_desc = "av1parse";
     } else {
         encoder_desc = "x264enc bitrate=%d speed-preset=ultrafast tune=zerolatency";
         parser_desc = "h264parse";
     }
     
-    // Format the encoder string with the bitrate
+    // Format the encoder string with the bitrate (all three encoders take kbps)
     char encoder_formatted[512];
-    if (strcmp(params->codec, "av1") == 0) {
-        // svtav1enc expects bps
-        snprintf(encoder_formatted, sizeof(encoder_formatted), encoder_desc, params->video_bitrate * 1000);
-    } else {
-        // x264enc/x265enc expects kbps
-        snprintf(encoder_formatted, sizeof(encoder_formatted), encoder_desc, params->video_bitrate);
-    }
-    
+    snprintf(encoder_formatted, sizeof(encoder_formatted), encoder_desc, params->video_bitrate);
+
+    // Output size control: always present. A pad probe sets the exact output
+    // size once the source size is known (see size_caps_probe_cb): scaled down
+    // to max_height when asked, never up, and always even.
+    const char *scale_desc = "videoscale name=scaler ! capsfilter name=sizecaps ! ";
+
+    // The output path is NOT interpolated into the pipeline description: a
+    // user-chosen folder may contain quotes or other characters that would
+    // change the description. The filesink is named and its location is set
+    // as a property after parsing.
     char *desc = NULL;
     const char *display = getenv("DISPLAY");
     if (!display) display = ":1";
@@ -302,14 +359,14 @@ int myway_start_capture(const MyWayCaptureParams* params) {
     if (params->is_wayland) {
         if (params->audio_node_id >= 0 && params->audio_node_id < audio_device_count) {
             desc = g_strdup_printf(
-                "pipewiresrc fd=%d name=vsrc path=\"%lu\" ! queue ! videocrop name=crop ! videoconvert ! %s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink location=\"%s\" "
+                "pipewiresrc fd=%d name=vsrc path=\"%lu\" ! queue ! videoconvert ! %s%s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink name=fsink "
                 "pulsesrc device=\"%s\" ! queue ! audioconvert ! level name=level ! audioresample ! voaacenc ! queue ! mux.",
-                params->wayland_fd, params->video_node_id, encoder_formatted, parser_desc, params->output_path, audio_device_strings[params->audio_node_id]
+                params->wayland_fd, params->video_node_id, scale_desc, encoder_formatted, parser_desc, audio_device_strings[params->audio_node_id]
             );
         } else {
             desc = g_strdup_printf(
-                "pipewiresrc fd=%d name=vsrc path=\"%lu\" ! queue ! videocrop name=crop ! videoconvert ! %s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink location=\"%s\"",
-                params->wayland_fd, params->video_node_id, encoder_formatted, parser_desc, params->output_path
+                "pipewiresrc fd=%d name=vsrc path=\"%lu\" ! queue ! videoconvert ! %s%s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink name=fsink",
+                params->wayland_fd, params->video_node_id, scale_desc, encoder_formatted, parser_desc
             );
         }
     } else {
@@ -323,14 +380,14 @@ int myway_start_capture(const MyWayCaptureParams* params) {
 
         if (params->audio_node_id >= 0 && params->audio_node_id < audio_device_count) {
             desc = g_strdup_printf(
-                "ximagesrc name=vsrc display-name=\"%s\" %s ! queue ! videoconvert ! %s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink location=\"%s\" "
+                "ximagesrc name=vsrc display-name=\"%s\" %s ! queue ! videoconvert ! %s%s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink name=fsink "
                 "pulsesrc device=\"%s\" ! queue ! audioconvert ! level name=level ! audioresample ! voaacenc ! queue ! mux.",
-                display, xid_prop, encoder_formatted, parser_desc, params->output_path, audio_device_strings[params->audio_node_id]
+                display, xid_prop, scale_desc, encoder_formatted, parser_desc, audio_device_strings[params->audio_node_id]
             );
         } else {
             desc = g_strdup_printf(
-                "ximagesrc name=vsrc display-name=\"%s\" %s ! queue ! videoconvert ! %s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink location=\"%s\"",
-                display, xid_prop, encoder_formatted, parser_desc, params->output_path
+                "ximagesrc name=vsrc display-name=\"%s\" %s ! queue ! videoconvert ! %s%s ! %s ! queue ! mp4mux name=mux faststart=true ! filesink name=fsink",
+                display, xid_prop, scale_desc, encoder_formatted, parser_desc
             );
         }
     }
@@ -341,51 +398,34 @@ int myway_start_capture(const MyWayCaptureParams* params) {
     pipeline = gst_parse_launch(desc, &error);
     g_free(desc);
     
-    if (error) {
-        fprintf(stderr, "MyWay GStreamer Parse Error: %s\n", error->message);
-        g_error_free(error);
+    if (error || !pipeline) {
+        // Typically a missing GStreamer element, e.g. svtav1enc for AV1.
+        fprintf(stderr, "MyWay GStreamer Parse Error: %s\n", error ? error->message : "unknown");
+        if (error) g_error_free(error);
+        if (pipeline) {
+            gst_object_unref(pipeline);
+            pipeline = NULL;
+        }
         return -1;
     }
     
-    // Set up crop for X11 (using startx/starty/endx/endy on ximagesrc)
-    if (params->is_wayland == 0 && strcmp(params->mode, "area") == 0 && params->area_width > 0 && params->area_height > 0) {
-        GstElement *vsrc = gst_bin_get_by_name(GST_BIN(pipeline), "vsrc");
-        if (vsrc) {
-            g_object_set(G_OBJECT(vsrc),
-                         "startx", params->area_x,
-                         "starty", params->area_y,
-                         "endx", params->area_x + params->area_width - 1,
-                         "endy", params->area_y + params->area_height - 1,
-                         NULL);
-            gst_object_unref(vsrc);
-        }
+    GstElement *fsink = gst_bin_get_by_name(GST_BIN(pipeline), "fsink");
+    if (!fsink) {
+        fprintf(stderr, "MyWay: filesink not found in pipeline\n");
+        gst_object_unref(pipeline);
+        pipeline = NULL;
+        return -1;
+    }
+    g_object_set(G_OBJECT(fsink), "location", params->output_path, NULL);
+    gst_object_unref(fsink);
+
+    int max_height = (params->max_height > 0 && params->max_height <= 4320) ? params->max_height : 0;
+    if (attach_size_control(pipeline, max_height) != 0) {
+        gst_object_unref(pipeline);
+        pipeline = NULL;
+        return -1;
     }
 
-    
-    
-    // Set up crop probe if mode is area and coordinates are valid (Wayland only)
-    if (params->is_wayland && strcmp(params->mode, "area") == 0 && params->area_width > 0 && params->area_height > 0) {
-        GstElement *vsrc = gst_bin_get_by_name(GST_BIN(pipeline), "vsrc");
-        GstElement *crop = gst_bin_get_by_name(GST_BIN(pipeline), "crop");
-        if (vsrc && crop) {
-            GstPad *srcpad = gst_element_get_static_pad(vsrc, "src");
-            if (srcpad) {
-                CropProbeData *probe_data = g_new0(CropProbeData, 1);
-                probe_data->area_x = params->area_x;
-                probe_data->area_y = params->area_y;
-                probe_data->area_width = params->area_width;
-                probe_data->area_height = params->area_height;
-                probe_data->crop_el = crop;
-                
-                gst_pad_add_probe(srcpad, GST_PAD_PROBE_TYPE_BUFFER,
-                                  crop_pad_probe_cb, probe_data, g_free);
-                gst_object_unref(srcpad);
-            }
-            gst_object_unref(vsrc);
-            gst_object_unref(crop);
-        }
-    }
-    
     is_recording = TRUE;
     recording_duration_sec = 0;
     current_recording_vu = 0.0;
@@ -397,10 +437,16 @@ int myway_start_capture(const MyWayCaptureParams* params) {
 }
 
 // Stops recording and flushes the pipeline (crucial for MP4 metadata writing)
+int myway_is_recording(void) {
+    return is_recording ? 1 : 0;
+}
+
 int myway_stop_capture(void) {
-    if (!is_recording) return 0;
-    
-    if (pipeline) {
+    // A pipeline that stopped itself on an error has is_recording == FALSE but
+    // still needs tearing down, so only bail out when there is nothing at all.
+    if (!is_recording && !pipeline) return 0;
+
+    if (pipeline && is_recording) {
         printf("MyWay: Sending EOS to pipeline for clean MP4 writing...\n");
         gst_element_send_event(pipeline, gst_event_new_eos());
         

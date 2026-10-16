@@ -6,6 +6,47 @@ All notable changes to the MyWay project are documented in this file. This proje
 
 ## [Unreleased]
 
+### Fixed — claims now match the code (2026-10-15 review)
+- **AV1 recording works.** The pipeline set a `bitrate` property that the
+  GStreamer 1.22+ `svtav1enc` doesn't have, so every AV1 recording failed. It
+  now uses `target-bitrate` (kbps).
+- **Odd-sized windows record in AV1.** SVT-AV1 refuses odd frame sizes; the
+  output size is now always rounded to even numbers.
+- **Recording Quality works.** It was shown but never saved or used. It now
+  scales the video down to at most 720p, 1080p or 2160p (never up), with a new
+  default of "Source (no scaling)".
+- **Output Folder can be changed.** The folder button did nothing; it now opens
+  the desktop's folder chooser (xdg-desktop-portal FileChooser), with a reset
+  to `~/Videos`.
+- **Start failures are reported.** The native start result was ignored, so a
+  missing encoder looked like a successful start. The app now says what went
+  wrong.
+- **Mid-recording failures are reported.** If the pipeline stops by itself
+  (for example the disk fills up), the app now says so instead of carrying on
+  and later reporting "Recording saved". Empty files are removed, and the
+  native pipeline is released.
+- **Screen sharing ends when recording stops.** The portal session was left
+  open until MyWay quit, keeping GNOME's screen-sharing indicator on.
+- **Checksum file works with `sha512sum -c`.** The `.sha512` file held only the
+  bare hash; it is now in the standard `<hash>  <filename>` format.
+- The codec shown in Settings now matches the codec actually used (the screen
+  showed H.265 while recordings used H.264). The output folder no longer falls
+  back to a hard-coded home directory.
+- The output path is now set as a filesink property rather than interpolated
+  into the pipeline description, so folder names with quotes can't alter it.
+
+### Removed
+- **Area recording**, which had no way to be selected in the interface
+  (unused `area_selector.dart` removed; the native crop code removed).
+- **Hardware-acceleration claim.** Encoding is, and always was, in software.
+  The unused `gstreamer1.0-vaapi` and `libva2` dependencies were dropped.
+- The README's `.mkv` claim (recordings are MP4).
+
+### Changed
+- Package dependencies now include `gstreamer1.0-plugins-base`, `libgtk-3-0`
+  and `x11-utils` (for X11 window selection); `xdg-desktop-portal-gnome` is
+  recommended.
+
 ### Security
 - **FD hand-off socket moved off `/tmp`:** the UNIX socket that transfers the
   screen-capture file descriptor is now created in the per-user

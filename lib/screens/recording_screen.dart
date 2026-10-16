@@ -25,7 +25,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
   bool _isPromptingPortal = false;
   PortalService? _portal;
   int _durationSec = 0;
-  Rect? _selectedArea;
   StreamSubscription? _statusSubscription;
   String? _currentRecordingPath;
 
@@ -45,12 +44,46 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   void _subscribeToStatus() {
     _statusSubscription = captureStatusStreamController.stream.listen((status) {
-      if (mounted) {
-        setState(() {
-          _durationSec = status.durationSec;
-        });
+      if (!mounted) return;
+      if (!status.active && _isRecording) {
+        _handleRecordingFailure();
+        return;
       }
+      setState(() {
+        _durationSec = status.durationSec;
+      });
     });
+  }
+
+  /// The native pipeline stopped by itself (for example the disk filled up or
+  /// the output folder became unwritable). Tell the user rather than letting
+  /// the UI carry on as if it were still recording.
+  Future<void> _handleRecordingFailure() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final path = _currentRecordingPath;
+    _captureService.stopCapture(); // releases the native pipeline
+    await _portal?.close();
+    _portal = null;
+    if (path != null) {
+      final file = File(path);
+      if (await file.exists() && await file.length() == 0) {
+        await file.delete(); // nothing was recorded; don't leave an empty file
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _isRecording = false;
+      _currentRecordingPath = null;
+    });
+    messenger.showSnackBar(
+      const SnackBar(
+        duration: Duration(seconds: 8),
+        content: Text(
+          'Recording stopped unexpectedly. The file may be incomplete. '
+          'Turn on debug logging in Support to see why.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -104,6 +137,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       final audioDeviceId = await _settings.getAudioDeviceId();
       final codec = await _settings.getCodec();
       final bitrate = await _settings.getBitrate();
+      final maxHeight = await _settings.getMaxHeight();
       final resolvedFolder = await _settings.getResolvedOutputFolder();
 
       // Ensure output directory exists
@@ -126,10 +160,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
         audioNodeId: audioDeviceId,
         outputPath: outputFilePath,
         isWayland: _isWayland,
-        areaX: _selectedArea?.left.toInt() ?? 0,
-        areaY: _selectedArea?.top.toInt() ?? 0,
-        areaWidth: _selectedArea?.width.toInt() ?? 0,
-        areaHeight: _selectedArea?.height.toInt() ?? 0,
+        maxHeight: maxHeight,
       );
 
       // 5. Start GStreamer capturing in C
@@ -145,6 +176,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
       );
     } catch (e) {
       debugPrint('Error starting capture: $e');
+      // Nothing is recording, so release the screen-sharing session too.
+      await _portal?.close();
+      _portal = null;
+      if (!mounted) return;
       setState(() {
         _isPromptingPortal = false;
       });
@@ -171,6 +206,12 @@ class _RecordingScreenState extends State<RecordingScreen> {
     } catch (e) {
       debugPrint('Error stopping capture: $e');
     }
+
+    // End the screen-sharing session: closing our D-Bus connection closes the
+    // portal session, so GNOME stops showing the "screen is shared" indicator.
+    await _portal?.close();
+    _portal = null;
+    if (!mounted) return;
 
     setState(() {
       _isRecording = false;

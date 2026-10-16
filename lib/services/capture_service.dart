@@ -25,6 +25,8 @@ final class MyWayCaptureParamsStruct extends Struct {
   @Array(1024)
   external Array<Uint8> outputPath;
 
+  // area* fields: unused since area recording was removed; kept so the layout
+  // matches the C struct.
   @Int32()
   external int areaX;
 
@@ -42,7 +44,15 @@ final class MyWayCaptureParamsStruct extends Struct {
 
   @Int32()
   external int waylandFd;
+
+  /// 0 = record at source resolution; otherwise scale down to at most this
+  /// height. Must stay the LAST field, matching `max_height` in the C struct.
+  @Int32()
+  external int maxHeight;
 }
+
+typedef MyWayIsRecordingFunc = Int32 Function();
+typedef MyWayIsRecording = int Function();
 
 typedef MyWayInitFunc = Int32 Function();
 typedef MyWayInit = int Function();
@@ -86,13 +96,29 @@ class CaptureStatus {
   /// never measured (always reported 0) — exposing them implied data the
   /// pipeline did not actually provide. Re-add them only when wired to real
   /// values from the GStreamer pipeline.
-  CaptureStatus(this.durationSec, this.vuLevel);
+  CaptureStatus(this.durationSec, this.vuLevel, {this.active = true});
 
   /// Session duration recorded so far in seconds.
   final int durationSec;
 
+  /// False when the native recording has stopped by itself (an error in the
+  /// GStreamer pipeline, such as the output folder becoming unwritable).
+  final bool active;
+
   /// Current audio volume meter amplitude level.
   final double vuLevel;
+}
+
+/// Thrown when the native recording pipeline could not be started.
+class CaptureStartException implements Exception {
+  /// Creates a [CaptureStartException] with a user-facing [message].
+  CaptureStartException(this.message);
+
+  /// A user-facing explanation of what went wrong.
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 /// Global stream controller to broadcast capture metric snapshots to the UI.
@@ -151,6 +177,9 @@ class CaptureService {
           'myway_get_recording_duration',
         )
         .asFunction();
+    _mywayIsRecording = _lib
+        .lookup<NativeFunction<MyWayIsRecordingFunc>>('myway_is_recording')
+        .asFunction();
     _mywayGetMonitorVu = _lib
         .lookup<NativeFunction<MyWayGetMonitorVuFunc>>('myway_get_monitor_vu')
         .asFunction();
@@ -177,6 +206,7 @@ class CaptureService {
   late MyWayGetRecordingVu _mywayGetRecordingVu;
   late MyWayGetRecordingDuration _mywayGetRecordingDuration;
   late MyWayGetMonitorVu _mywayGetMonitorVu;
+  late MyWayIsRecording _mywayIsRecording;
   late MyWayTeardown _mywayTeardown;
   late MyWaySetupFdExtraction _mywaySetupFdExtraction;
   late MyWayReadExtractedFd _mywayReadExtractedFd;
@@ -193,6 +223,9 @@ class CaptureService {
   ///
   /// Allocates C-compatible parameters memory using [RecordingParams], dispatches
   /// the FFI start invocation, and runs a periodic timer to poll metrics.
+  ///
+  /// Throws a [CaptureStartException] if the native side could not build the
+  /// recording pipeline (most often a missing GStreamer encoder).
   void startCapture(RecordingParams params) {
     _captureTimer?.cancel();
 
@@ -205,27 +238,46 @@ class CaptureService {
     struct.videoNodeId = params.videoNodeId;
     struct.audioNodeId = params.audioNodeId;
     _writeStringToNativeArray(struct.outputPath, params.outputPath, 1024);
-    struct.areaX = params.areaX;
-    struct.areaY = params.areaY;
-    struct.areaWidth = params.areaWidth;
-    struct.areaHeight = params.areaHeight;
+    struct.areaX = 0;
+    struct.areaY = 0;
+    struct.areaWidth = 0;
+    struct.areaHeight = 0;
     struct.isWayland = params.isWayland ? 1 : 0;
     struct.waylandFd = params.waylandFd;
+    struct.maxHeight = params.maxHeight;
 
     // Ownership contract: myway_start_capture() consumes every field of the
     // params struct synchronously (it builds the GStreamer pipeline description
     // up front and copies all strings/ints before returning; the recording
     // thread it spawns receives NULL user-data, not this pointer). It is
     // therefore safe to free the struct immediately after the call returns.
-    _mywayStartCapture(structPtr);
+    final result = _mywayStartCapture(structPtr);
     calloc.free(structPtr);
+
+    if (result != 0) {
+      throw CaptureStartException(
+        params.codec == 'av1'
+            ? 'Could not start the AV1 encoder. Install the GStreamer SVT-AV1 '
+                  'plug-in (svtav1enc) or choose H.264 in Settings.'
+            : 'Could not start the recording pipeline. A required GStreamer '
+                  'plug-in may be missing; see the log for details.',
+      );
+    }
 
     // Poll status every 100ms
     _captureTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       final duration = _mywayGetRecordingDuration();
       final vu = _mywayGetRecordingVu();
-      captureStatusStreamController.add(CaptureStatus(duration, vu));
+      final active = _mywayIsRecording() != 0;
+      captureStatusStreamController.add(
+        CaptureStatus(duration, vu, active: active),
+      );
       audioMonitorStreamController.add(vu);
+      if (!active) {
+        // The pipeline stopped by itself; stop polling. The UI calls
+        // stopCapture() to release the native pipeline.
+        timer.cancel();
+      }
     });
   }
 
