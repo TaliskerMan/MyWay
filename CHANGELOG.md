@@ -4,7 +4,11 @@ All notable changes to the MyWay project are documented in this file. This proje
 
 ---
 
-## [Unreleased]
+## [1.0.2+3] - 2026-10-16
+
+### Security & Hardening
+- **Safe bounded string copies**: Replaced `strncpy` with `snprintf` across `native/libmyway_capture.c` to guarantee bounded length, explicit NUL-termination, and clear Semgrep security audit gate.
+- **Developer contact & license compliance**: Added `chuck@nordheim.online` interactive contact link to the About screen per CP-AboutPage.
 
 ### Fixed — claims now match the code (2026-10-15 review)
 - **AV1 recording works.** The pipeline set a `bitrate` property that the

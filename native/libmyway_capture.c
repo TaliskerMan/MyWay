@@ -74,16 +74,16 @@ MyWayAudioDevice* myway_get_audio_devices(int* count) {
             const gchar *dev_str = gst_structure_get_string(props, "device.string");
             
             if (dev_str && audio_device_count < 256) {
-                strncpy(audio_device_strings[audio_device_count], dev_str, 255);
-                audio_device_strings[audio_device_count][255] = '\0';
+                // Use snprintf instead of strncpy for guaranteed NUL termination and safety (CP-ChangeComments / CP-SecurityAudit)
+                snprintf(audio_device_strings[audio_device_count], sizeof(audio_device_strings[audio_device_count]), "%s", dev_str);
                 id = audio_device_count;
                 audio_device_count++;
             } else {
                 // Fallback if device.string is missing, though pulsesrc might not like numeric strings
                 const gchar *serial_str = gst_structure_get_string(props, "object.serial");
                 if (serial_str && audio_device_count < 256) {
-                    strncpy(audio_device_strings[audio_device_count], serial_str, 255);
-                    audio_device_strings[audio_device_count][255] = '\0';
+                    // Safe bounded copy with guaranteed NUL termination
+                    snprintf(audio_device_strings[audio_device_count], sizeof(audio_device_strings[audio_device_count]), "%s", serial_str);
                     id = audio_device_count;
                     audio_device_count++;
                 }
@@ -100,8 +100,8 @@ MyWayAudioDevice* myway_get_audio_devices(int* count) {
                 }
                 
                 result[found].id = id;
-                strncpy(result[found].name, name, 255);
-                result[found].name[255] = '\0';
+                // Safe bounded copy into device struct with guaranteed NUL termination
+                snprintf(result[found].name, sizeof(result[found].name), "%s", name);
                 found++;
             }
             
@@ -637,7 +637,8 @@ void myway_setup_fd_extraction(const char* socket_path) {
         unlink(current_socket_path);
     }
     
-    strncpy(current_socket_path, socket_path, sizeof(current_socket_path) - 1);
+    // Safe bounded copy with guaranteed NUL-termination (CP-SecurityAudit)
+    snprintf(current_socket_path, sizeof(current_socket_path), "%s", socket_path);
     
     extraction_socket = socket(AF_UNIX, SOCK_STREAM, 0);
     if (extraction_socket < 0) return;
@@ -645,7 +646,8 @@ void myway_setup_fd_extraction(const char* socket_path) {
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
+    // Safe bounded copy into sockaddr_un with guaranteed NUL-termination
+    snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", socket_path);
     
     unlink(socket_path);
 

@@ -143,6 +143,28 @@ class _AboutScreenState extends State<AboutScreen> {
                 style: TextStyle(fontSize: 16, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 8),
+              // Contact email for developer per CP-AboutPage with interactive mailto link
+              InkWell(
+                onTap: () async {
+                  final emailLaunchUri = Uri(
+                    scheme: 'mailto',
+                    path: 'chuck@nordheim.online',
+                  );
+                  if (!await launchUrl(emailLaunchUri)) {
+                    debugPrint('Could not launch $emailLaunchUri');
+                  }
+                },
+                child: const Text(
+                  'chuck@nordheim.online',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.teal,
+                    decoration: TextDecoration.underline,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
               const SizedBox(height: 48),
               const Text(
                 'GNU Affero General Public License v3.0 (AGPL-3.0)',

@@ -1,7 +1,7 @@
 Package: myway
 Version: 1.0.2
 Architecture: amd64
-Maintainer: Chuck Talk <support@nordheim.online>
+Maintainer: Chuck Talk <chuck@nordheim.online>
 Section: video
 Priority: optional
 License: AGPL-3.0
