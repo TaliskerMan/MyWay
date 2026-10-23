@@ -4,6 +4,14 @@ All notable changes to the MyWay project are documented in this file. This proje
 
 ---
 
+## [1.0.2+4] - 2026-10-23
+
+### Fixed & Enhanced
+- **High-Resolution Hicolor Icon Suite**: Generated and packaged the complete 9-tier hicolor icon suite (`16x16`, `24x24`, `32x32`, `48x48`, `64x64`, `96x96`, `128x128`, `256x256`, and `512x512`) using high-quality Lanczos resampling. Both `myway.png` and `com.example.myway.png` are distributed to `/usr/share/icons/hicolor/<size>/apps/` for crystal-clear rendering on Desktop, AppGrid, and panel.
+- **GTK Runner Icon Integration**: Updated `linux/runner/my_application.cc` to explicitly register window icon name `myway` and load the high-resolution master asset as a direct fallback pixbuf for panel, dock, and Alt-Tab window switcher.
+- **Packaging Automation**: Enhanced Debian package scripts (`postinst`, `postrm`) to automatically update GTK icon cache and desktop database upon installation and removal.
+- **Cryptographic Signatures & Checksums**: Added detached binary (`.sig`) in addition to ASCII-armored (`.asc`) GPG detached signatures, single-file `.sha512` and `.sha256` checksums, and multi-file `SHA512SUMS` and `SHA256SUMS` manifests.
+
 ## [1.0.2+3] - 2026-10-16
 
 ### Security & Hardening

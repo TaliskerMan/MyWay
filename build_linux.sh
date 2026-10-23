@@ -8,8 +8,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 cd "${SCRIPT_DIR}"
 
-echo "==> Incrementing build version..."
-bash "${SCRIPT_DIR}/scripts/increment_build.sh"
+NO_BUMP=false
+for arg in "$@"; do
+    if [ "$arg" == "--no-bump" ]; then
+        NO_BUMP=true
+    fi
+done
+
+if [ "$NO_BUMP" = false ]; then
+    echo "==> Incrementing build version..."
+    bash "${SCRIPT_DIR}/scripts/increment_build.sh"
+else
+    echo "==> Re-using current version without bumping (--no-bump specified)"
+fi
 
 if [ -f pubspec.yaml ]; then
     CURRENT_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | tr -d '\r')
@@ -57,6 +68,7 @@ BUILD_DIR="${SCRIPT_DIR}/build/linux/${FLUTTER_ARCH}/release/bundle"
 DEB_ROOT="${SCRIPT_DIR}/packaging/linux_build/deb_pkg"
 
 echo "==> MyWay Linux Release Builder v${VERSION}+${BUILD_SUFFIX}"
+rm -rf "${ARTIFACTS}"
 mkdir -p "${ARTIFACTS}"
 
 echo "==> Building Flutter Linux release..."
@@ -84,6 +96,8 @@ if command -v "${SYFT_BIN}" &> /dev/null; then
         --exclude ./dist \
         --exclude ./plan \
         --exclude ./.dart_tool \
+        --exclude ./.agents \
+        --exclude ./.gemini \
         -o cyclonedx-json > "${SCRIPT_DIR}/Audit/SBOM-Linux.json"
     cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${SCRIPT_DIR}/Audit/SBOM-Linux"
     cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${SCRIPT_DIR}/Audit/sbom.json"
@@ -95,7 +109,7 @@ mkdir -p "${DEB_ROOT}/DEBIAN"
 mkdir -p "${DEB_ROOT}/usr/bin"
 mkdir -p "${DEB_ROOT}/usr/lib/myway"
 mkdir -p "${DEB_ROOT}/usr/share/applications"
-mkdir -p "${DEB_ROOT}/usr/share/icons/hicolor/256x256/apps"
+mkdir -p "${DEB_ROOT}/usr/share/icons/hicolor"
 mkdir -p "${DEB_ROOT}/usr/share/doc/myway"
 
 echo "==> Copying build artifacts..."
@@ -122,8 +136,22 @@ Categories=Utility;Video;AudioVideo;
 StartupWMClass=com.example.myway
 DESKTOP
 
-# Copy application icon
-cp "${SCRIPT_DIR}/assets/myway.png" "${DEB_ROOT}/usr/share/icons/hicolor/256x256/apps/myway.png"
+# Also install com.example.myway.desktop for Wayland / GNOME Shell matching
+cp "${DEB_ROOT}/usr/share/applications/myway.desktop" "${DEB_ROOT}/usr/share/applications/com.example.myway.desktop"
+
+# Copy full 9-tier hicolor icon suite (16x16 to 512x512)
+echo "==> Copying high-resolution hicolor icon suite..."
+cp -r "${SCRIPT_DIR}/share/icons/hicolor/." "${DEB_ROOT}/usr/share/icons/hicolor/"
+
+# Copy package control scripts
+if [ -f "${SCRIPT_DIR}/debian/postinst" ]; then
+    cp "${SCRIPT_DIR}/debian/postinst" "${DEB_ROOT}/DEBIAN/postinst"
+    chmod 755 "${DEB_ROOT}/DEBIAN/postinst"
+fi
+if [ -f "${SCRIPT_DIR}/debian/postrm" ]; then
+    cp "${SCRIPT_DIR}/debian/postrm" "${DEB_ROOT}/DEBIAN/postrm"
+    chmod 755 "${DEB_ROOT}/DEBIAN/postrm"
+fi
 
 if [ -f "${SCRIPT_DIR}/LICENSE" ]; then
     cp "${SCRIPT_DIR}/LICENSE" "${DEB_ROOT}/usr/share/doc/myway/copyright"
@@ -150,19 +178,41 @@ echo "==> Building .deb package..."
 DEB_FILE="${ARTIFACTS}/${PKG_NAME}_${VERSION}-${BUILD_SUFFIX}_${ARCH}.deb"
 dpkg-deb --build --root-owner-group "${DEB_ROOT}" "${DEB_FILE}"
 
-echo "==> Generating SHA512 hash..."
-# Standard "<hash>  <filename>" format so users can run: sha512sum -c <file>.sha512
-(cd "$(dirname "${DEB_FILE}")" && sha512sum "$(basename "${DEB_FILE}")" > "$(basename "${DEB_FILE}").sha512")
-
 echo "==> Signing .deb with GPG..."
+GPG_KEY="chuck@nordheim.online"
 if command -v gpg > /dev/null 2>&1; then
-    gpg --local-user chuck@nordheim.online --detach-sign --yes --armor "${DEB_FILE}"
-    echo "    Signed: ${DEB_FILE}.asc"
-    gpg --export -a chuck@nordheim.online > "${ARTIFACTS}/chuck_pubkey.asc"
-    echo "    Pubkey: ${ARTIFACTS}/chuck_pubkey.asc"
+    gpg --batch --yes --pinentry-mode loopback --local-user "${GPG_KEY}" --detach-sign --armor --output "${DEB_FILE}.asc" "${DEB_FILE}"
+    echo "    Signed (ASCII): ${DEB_FILE}.asc"
+    gpg --batch --yes --pinentry-mode loopback --local-user "${GPG_KEY}" --detach-sign --output "${DEB_FILE}.sig" "${DEB_FILE}"
+    echo "    Signed (Binary): ${DEB_FILE}.sig"
+    gpg --armor --export "${GPG_KEY}" > "${ARTIFACTS}/chuck_pubkey.asc"
+    cp "${ARTIFACTS}/chuck_pubkey.asc" "${ARTIFACTS}/pubkey.asc"
+    echo "    Pubkeys: ${ARTIFACTS}/chuck_pubkey.asc and pubkey.asc"
 else
     echo "    WARNING: gpg not found - package NOT signed!"
 fi
+
+echo "==> Generating SHA512 and SHA256 checksums..."
+(cd "${ARTIFACTS}" && sha512sum "$(basename "${DEB_FILE}")" > "$(basename "${DEB_FILE}").sha512")
+(cd "${ARTIFACTS}" && sha256sum "$(basename "${DEB_FILE}")" > "$(basename "${DEB_FILE}").sha256")
+
+if [ -f "${DEB_FILE}.sha512" ] && command -v gpg > /dev/null 2>&1; then
+    gpg --batch --yes --pinentry-mode loopback --local-user "${GPG_KEY}" --detach-sign --armor --output "${DEB_FILE}.sha512.asc" "${DEB_FILE}.sha512"
+fi
+
+# Copy user guide, source tarball, and docs into artifacts
+if [ -f "${SCRIPT_DIR}/docs/MyWay_User_Guide.pdf" ]; then
+    cp "${SCRIPT_DIR}/docs/MyWay_User_Guide.pdf" "${ARTIFACTS}/MyWay_User_Guide.pdf"
+fi
+if [ -f "${SCRIPT_DIR}/Audit/security_report.md" ]; then
+    cp "${SCRIPT_DIR}/Audit/security_report.md" "${ARTIFACTS}/security_report.md"
+fi
+
+tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=.agents --exclude=.gemini --exclude=packaging/linux_build -czf "${ARTIFACTS}/myway_source.tar.gz" -C "${SCRIPT_DIR}" .
+
+# Multi-file checksums
+(cd "${ARTIFACTS}" && sha512sum * > SHA512SUMS 2>/dev/null || true)
+(cd "${ARTIFACTS}" && sha256sum * > SHA256SUMS 2>/dev/null || true)
 
 echo "==> Copying to NOBuilds directory..."
 DATE_STR=$(date +%m-%d-%Y)
@@ -170,19 +220,18 @@ NOBUILDS_DIR="${HOME}/NOBuilds/MyWay-${DATE_STR}-${VERSION}"
 mkdir -p "${NOBUILDS_DIR}"
 cp "${ARTIFACTS}/"* "${NOBUILDS_DIR}/"
 
-# Copy license, readme, sbom, and generate source code archive
+# Copy license, readme, sbom to NOBuilds
 cp "${SCRIPT_DIR}/LICENSE" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/README.md" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/Audit/SBOM-Linux" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/Audit/sbom.json" "${NOBUILDS_DIR}/" || true
-tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=packaging/linux_build -czf "${NOBUILDS_DIR}/myway_source.tar.gz" -C "${SCRIPT_DIR}" .
 
 echo ""
 echo "==================================="
 echo "  Build complete!"
 echo "  Package : ${DEB_FILE}"
 echo "  SHA512  : ${DEB_FILE}.sha512"
-echo "  GPG sig : ${DEB_FILE}.asc"
+echo "  GPG sig : ${DEB_FILE}.asc / .sig"
 echo "  Local   : ${NOBUILDS_DIR}"
 echo "==================================="

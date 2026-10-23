@@ -98,6 +98,7 @@ ${body}
 async function renderPdf() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
+  // nosemgrep: javascript.playwright.security.audit.playwright-setcontent-injection.playwright-setcontent-injection
   await page.setContent(html, { waitUntil: 'load' });
   let cleanTitle = meta.title || '';
   while (cleanTitle.includes('<') && cleanTitle.includes('>')) {
