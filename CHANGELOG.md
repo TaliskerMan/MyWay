@@ -4,6 +4,14 @@ All notable changes to the MyWay project are documented in this file. This proje
 
 ---
 
+## [1.0.2+5] - 2026-11-16
+
+### Security & Quality
+- **SonarQube Cloud & Snyk Remediation**: Resolved all 48 SonarQube Cloud findings (including 3 security vulnerabilities and 45 code smells) across `native/libmyway_capture.c`, `linux/runner/my_application.cc`, `docs/guide/build_guide.js`, `build_linux.sh`, and `scripts/local_build_and_scan.sh`.
+- **Agentic CLI Path Traversal Hardening (`jssecurity:S8707`)**: Added `safePath()` and `safeOutputPath()` canonical base-directory confinement in `docs/guide/build_guide.js`.
+- **Native Capture Engine Refactoring (`native/libmyway_capture.c`)**: Extracted modular helpers to reduce cognitive complexity (`c:S3776`) and control-flow nesting (`c:S134`), eliminated logical `&&` right-hand side-effects (`c:S912`), replaced process-wide `umask(0077)` with descriptor-scoped `fchmod`/`chmod` (`c:S5849`), and replaced variable format strings with literal `snprintf` calls (`c:S5281`).
+- **Log Hardening (`CP-Logging`)**: Added CR/LF log injection sanitization (`LogService.sanitize`), `0600` file permissions, and 5 MiB log rotation in `lib/services/log_service.dart`.
+
 ## [1.0.2+4] - 2026-10-23
 
 ### Fixed & Enhanced

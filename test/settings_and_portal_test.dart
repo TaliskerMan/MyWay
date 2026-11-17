@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:myway/services/log_service.dart';
 import 'package:myway/services/portal_service.dart';
 import 'package:myway/services/settings_service.dart';
 
@@ -54,6 +55,15 @@ void main() {
 
     test('rejects non-file URIs', () {
       expect(PortalService.folderPathFromUri('https://example.com/x'), isNull);
+    });
+  });
+
+  group('LogService.sanitize', () {
+    test('strips CR and LF characters to prevent log injection', () {
+      expect(
+        LogService.sanitize('recording\r\nstarted\nforged'),
+        'recording  started forged',
+      );
     });
   });
 }

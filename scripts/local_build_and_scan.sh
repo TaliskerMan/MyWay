@@ -10,12 +10,12 @@ echo "=== Starting MyWay Secure Build & Release Pipeline ==="
 echo "=> Auto-incrementing build number..."
 CURRENT_VERSION_LINE=$(grep "version: " pubspec.yaml)
 # Extract the version part e.g. "1.0.0+1"
-CURRENT_VERSION_FULL=$(echo $CURRENT_VERSION_LINE | awk '{print $2}')
+CURRENT_VERSION_FULL=$(echo "$CURRENT_VERSION_LINE" | awk '{print $2}')
 # Split by '+'
-BASE_VERSION=$(echo $CURRENT_VERSION_FULL | cut -d'+' -f1)
-BUILD_NUM=$(echo $CURRENT_VERSION_FULL | cut -d'+' -f2)
+BASE_VERSION=$(echo "$CURRENT_VERSION_FULL" | cut -d'+' -f1)
+BUILD_NUM=$(echo "$CURRENT_VERSION_FULL" | cut -d'+' -f2)
 
-if [ -z "$BUILD_NUM" ]; then
+if [[ -z "$BUILD_NUM" ]]; then
     BUILD_NUM=0
 fi
 
@@ -62,7 +62,7 @@ mkdir -p "${DEB_DIR}/usr/share/applications"
 mkdir -p "${DEB_DIR}/usr/share/icons/hicolor/256x256/apps"
 
 # Copy application bundle
-cp -r ${BUILD_DIR}/* "${DEB_DIR}/opt/myway/"
+cp -r "${BUILD_DIR}"/* "${DEB_DIR}/opt/myway/"
 
 # Create launcher wrapper
 cat << 'EOF' > "${DEB_DIR}/usr/bin/myway"

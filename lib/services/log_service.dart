@@ -17,6 +17,12 @@ class LogService {
   Logger? _logger;
   File? _logFile;
   bool _isEnabled = false;
+  static const int _maxLogBytes = 5 * 1024 * 1024;
+
+  /// Sanitizes a log [message] by replacing CR/LF control characters to prevent log injection.
+  static String sanitize(String message) {
+    return message.replaceAll('\r', ' ').replaceAll('\n', ' ');
+  }
 
   /// Initializes the logger instance and configuration.
   ///
@@ -26,6 +32,16 @@ class LogService {
     if (_isEnabled) {
       final directory = await getApplicationSupportDirectory();
       _logFile = File('${directory.path}/myway_debug.log');
+      if (await _logFile!.exists() &&
+          await _logFile!.length() > _maxLogBytes) {
+        await _logFile!.rename('${_logFile!.path}.1');
+      }
+      if (!await _logFile!.exists()) {
+        await _logFile!.create(recursive: true);
+      }
+      if (!Platform.isWindows) {
+        await Process.run('chmod', ['600', _logFile!.path]);
+      }
 
       _logger = Logger(
         printer: PrettyPrinter(
@@ -47,14 +63,14 @@ class LogService {
   /// Logs an informational [message] to the active outputs.
   void logInfo(String message) {
     if (_isEnabled && _logger != null) {
-      _logger!.i(message);
+      _logger!.i(sanitize(message));
     }
   }
 
   /// Logs an error message with optional [error] objects and [stackTrace] maps.
   void logError(String message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled && _logger != null) {
-      _logger!.e(message, error: error, stackTrace: stackTrace);
+      _logger!.e(sanitize(message), error: error, stackTrace: stackTrace);
     }
   }
 

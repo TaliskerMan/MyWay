@@ -1,0 +1,6 @@
+build/
+native/build/
+.dart_tool/
+Audit/
+packaging/
+test/

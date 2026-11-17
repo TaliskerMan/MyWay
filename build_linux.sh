@@ -10,19 +10,19 @@ cd "${SCRIPT_DIR}"
 
 NO_BUMP=false
 for arg in "$@"; do
-    if [ "$arg" == "--no-bump" ]; then
+    if [[ "$arg" == "--no-bump" ]]; then
         NO_BUMP=true
     fi
 done
 
-if [ "$NO_BUMP" = false ]; then
+if [[ "$NO_BUMP" = false ]]; then
     echo "==> Incrementing build version..."
     bash "${SCRIPT_DIR}/scripts/increment_build.sh"
 else
     echo "==> Re-using current version without bumping (--no-bump specified)"
 fi
 
-if [ -f pubspec.yaml ]; then
+if [[ -f pubspec.yaml ]]; then
     CURRENT_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | tr -d '\r')
     VERSION="${CURRENT_VERSION%+*}"
     BUILD_SUFFIX="${CURRENT_VERSION#*+}"
@@ -47,17 +47,17 @@ FLUTTER="flutter"
 ARTIFACTS="${SCRIPT_DIR}/packaging/linux_build/artifacts"
 
 # Fix clang++ linker issue on some arm64/Linux environments
-if [ -d "/usr/lib/gcc/aarch64-linux-gnu/13" ]; then
+if [[ -d "/usr/lib/gcc/aarch64-linux-gnu/13" ]]; then
     export LIBRARY_PATH="/usr/lib/gcc/aarch64-linux-gnu/13:${LIBRARY_PATH:-}"
 fi
-if [ -d "/usr/include/c++/13" ]; then
+if [[ -d "/usr/include/c++/13" ]]; then
     export CPLUS_INCLUDE_PATH="/usr/include/c++/13:/usr/include/aarch64-linux-gnu/c++/13:${CPLUS_INCLUDE_PATH:-}"
 fi
 
 UNAME_M=$(uname -m)
-if [ "$UNAME_M" = "x86_64" ]; then
+if [[ "$UNAME_M" = "x86_64" ]]; then
     FLUTTER_ARCH="x64"
-elif [ "$UNAME_M" = "aarch64" ]; then
+elif [[ "$UNAME_M" = "aarch64" ]]; then
     FLUTTER_ARCH="arm64"
 else
     FLUTTER_ARCH="$UNAME_M"
@@ -78,9 +78,9 @@ cd "${SCRIPT_DIR}"
 echo "==> Generating SBOM via Syft..."
 SYFT_BIN="syft"
 if ! command -v syft &> /dev/null; then
-    if [ -f "${HOME}/.local/bin/syft" ]; then
+    if [[ -f "${HOME}/.local/bin/syft" ]]; then
         SYFT_BIN="${HOME}/.local/bin/syft"
-    elif [ -f "./syft" ]; then
+    elif [[ -f "./syft" ]]; then
         SYFT_BIN="./syft"
     fi
 fi
@@ -144,16 +144,16 @@ echo "==> Copying high-resolution hicolor icon suite..."
 cp -r "${SCRIPT_DIR}/share/icons/hicolor/." "${DEB_ROOT}/usr/share/icons/hicolor/"
 
 # Copy package control scripts
-if [ -f "${SCRIPT_DIR}/debian/postinst" ]; then
+if [[ -f "${SCRIPT_DIR}/debian/postinst" ]]; then
     cp "${SCRIPT_DIR}/debian/postinst" "${DEB_ROOT}/DEBIAN/postinst"
     chmod 755 "${DEB_ROOT}/DEBIAN/postinst"
 fi
-if [ -f "${SCRIPT_DIR}/debian/postrm" ]; then
+if [[ -f "${SCRIPT_DIR}/debian/postrm" ]]; then
     cp "${SCRIPT_DIR}/debian/postrm" "${DEB_ROOT}/DEBIAN/postrm"
     chmod 755 "${DEB_ROOT}/DEBIAN/postrm"
 fi
 
-if [ -f "${SCRIPT_DIR}/LICENSE" ]; then
+if [[ -f "${SCRIPT_DIR}/LICENSE" ]]; then
     cp "${SCRIPT_DIR}/LICENSE" "${DEB_ROOT}/usr/share/doc/myway/copyright"
 fi
 
@@ -196,29 +196,29 @@ echo "==> Generating SHA512 and SHA256 checksums..."
 (cd "${ARTIFACTS}" && sha512sum "$(basename "${DEB_FILE}")" > "$(basename "${DEB_FILE}").sha512")
 (cd "${ARTIFACTS}" && sha256sum "$(basename "${DEB_FILE}")" > "$(basename "${DEB_FILE}").sha256")
 
-if [ -f "${DEB_FILE}.sha512" ] && command -v gpg > /dev/null 2>&1; then
+if [[ -f "${DEB_FILE}.sha512" ]] && command -v gpg > /dev/null 2>&1; then
     gpg --batch --yes --pinentry-mode loopback --local-user "${GPG_KEY}" --detach-sign --armor --output "${DEB_FILE}.sha512.asc" "${DEB_FILE}.sha512"
 fi
 
 # Copy user guide, source tarball, and docs into artifacts
-if [ -f "${SCRIPT_DIR}/docs/MyWay_User_Guide.pdf" ]; then
+if [[ -f "${SCRIPT_DIR}/docs/MyWay_User_Guide.pdf" ]]; then
     cp "${SCRIPT_DIR}/docs/MyWay_User_Guide.pdf" "${ARTIFACTS}/MyWay_User_Guide.pdf"
 fi
-if [ -f "${SCRIPT_DIR}/Audit/security_report.md" ]; then
+if [[ -f "${SCRIPT_DIR}/Audit/security_report.md" ]]; then
     cp "${SCRIPT_DIR}/Audit/security_report.md" "${ARTIFACTS}/security_report.md"
 fi
 
 tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=.agents --exclude=.gemini --exclude=packaging/linux_build -czf "${ARTIFACTS}/myway_source.tar.gz" -C "${SCRIPT_DIR}" .
 
 # Multi-file checksums
-(cd "${ARTIFACTS}" && sha512sum * > SHA512SUMS 2>/dev/null || true)
-(cd "${ARTIFACTS}" && sha256sum * > SHA256SUMS 2>/dev/null || true)
+(cd "${ARTIFACTS}" && { sha512sum -- ./* > SHA512SUMS 2>/dev/null || true; })
+(cd "${ARTIFACTS}" && { sha256sum -- ./* > SHA256SUMS 2>/dev/null || true; })
 
 echo "==> Copying to NOBuilds directory..."
 DATE_STR=$(date +%m-%d-%Y)
 NOBUILDS_DIR="${HOME}/NOBuilds/MyWay-${DATE_STR}-${VERSION}"
 mkdir -p "${NOBUILDS_DIR}"
-cp "${ARTIFACTS}/"* "${NOBUILDS_DIR}/"
+cp -- "${ARTIFACTS}/"* "${NOBUILDS_DIR}/"
 
 # Copy license, readme, sbom to NOBuilds
 cp "${SCRIPT_DIR}/LICENSE" "${NOBUILDS_DIR}/" || true
