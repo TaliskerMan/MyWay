@@ -4,6 +4,13 @@ All notable changes to the MyWay project are documented in this file. This proje
 
 ---
 
+## [1.0.2+6] - 2026-11-27
+
+### Released & Hardened
+- **Official Linux Release (`v1.0.2+6` / `myway_1.0.2-6_amd64.deb`):** Packaged and GPG-signed official Linux release rolling up all 48 SonarQube Cloud & Snyk clean-code and security remediations (`native/libmyway_capture.c`, `linux/runner/my_application.cc`, `lib/services/log_service.dart`, `docs/guide/build_guide.js`, and `build_linux.sh`).
+- **Guide Builder ESM & Documentation Alignment:** Migrated `docs/guide/build_guide.js` to hardened ES module syntax (`node:fs`, `node:path`, `node:url`) with `assets/noln.png` fallback and linear-time $O(n)$ parsers, updated `README.md` and `docs/guide/MyWay_User_Guide.md` to `1.0.2-6`, and regenerated `docs/MyWay_User_Guide.pdf`.
+- **SBOM & NOBuilds Hardening:** Updated `build_linux.sh` to strip local workstation paths from CycloneDX SBOMs (`Audit/SBOM-Linux.json`, `Audit/SBOM-Linux`, `Audit/sbom.json`) and generate full `SHA512SUMS` / `SHA256SUMS` manifests in `~/NOBuilds/MyWay-11-27-2026-1.0.2-6/`.
+
 ## [1.0.2+5] - 2026-11-16
 
 ### Security & Quality

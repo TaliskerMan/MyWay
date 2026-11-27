@@ -1,33 +1,28 @@
-# MyWay Security & Vulnerability Report — v1.0.2+4
+# MyWay Security & Quality Audit Report — v1.0.2+6 (`1.0.2-6`)
 
-## Overview
-This document represents an automated AI security audit of the MyWay Screen Recorder application (Flutter + C FFI) executed prior to the build release. The audit specifically focuses on ensuring adherence to the "ShadowAgent" principles ("first, do no harm") and strict user-space execution parameters.
+**Date:** November 27, 2026  
+**Application:** MyWay Screen Recorder (`v1.0.2+6` / `myway_1.0.2-6_amd64.deb`)  
+**Tools:** Snyk CLI (`v1.1309.0`), SonarQube Cloud (`TaliskerMan_MyWay`), Flutter Analyzer & Test (`3.50.1`), Syft, Grype, Trivy, OSV-Scanner, ShellCheck  
+**Repository:** `TaliskerMan/MyWay`
 
-## Scope & Verification
-This release underwent comprehensive local security, supply chain analysis, and static application security testing (SAST):
+---
 
-- **Semgrep OSS (SAST)**: 0 findings across 58 files and 486 security rules.
-- **OSV-Scanner (SCA)**: 0 vulnerabilities found across 81 package dependencies.
-- **Dart & Flutter Unit Tests**: All 12 unit tests passing (100% pass rate).
-- **Desktop & Icon Integration**: Complete 9-tier hicolor icon suite (16x16 to 512x512) generated with high-quality Lanczos resampling and packaged into `/usr/share/icons/hicolor/`.
-- **GTK Runner Enhancement**: Configured window icon name and direct high-resolution fallback pixbuf in `linux/runner/my_application.cc`.
-- **Cryptographic Packaging**: 64-bit Linux DEB package signed with Chuck Talk's GPG maintainer key (`chuck@nordheim.online`), producing detached `.asc` and `.sig` signatures alongside SHA-512 and SHA-256 manifests.
+## 1. Executive Summary
 
-## Codebase Audit (Flutter Layer)
-- **Dependencies**: The `pubspec.yaml` relies only on established first-party or highly trusted community packages (`url_launcher`, `shared_preferences`, `ffi`, `path_provider`, `dbus`, `package_info_plus`).
-- **File System Access**: Access is restricted to user-defined directories requested via the UI for storing `.mp4` recordings. No arbitrary system file traversal is present.
-- **Network Access**: Network access is restricted entirely. The application does not contain telemetric beacons, remote update checks, or background daemon processes. It operates strictly locally.
-- **ShadowAgent Compliance**: The application does not execute any hidden routines, risk automated data exfiltration, or modify system states without explicit user interaction.
+A multi-scanner security and quality audit was conducted on **MyWay v1.0.2+6** (`1.0.2-6`) per the Nordheim Online development standards (`~/sarules`).
 
-## Native Layer Audit (C / GStreamer / PipeWire)
-- **Memory Safety**: The native build utilizes `calloc`/`free` appropriately. Bounded `snprintf` is strictly enforced for string and path handling.
-- **Privilege Separation**: The C plugin (`libmyway_capture.so`) executes entirely within the unprivileged user-space sandbox.
-- **Audio/Video Enumeration**: Hardware access bypasses raw ALSA interfaces and strictly interfaces with XDG Desktop Portals and PipeWire. PipeWire guarantees that device enumeration and stream capture only occur after explicit Wayland compositor authorization. The application does not require and must not be run with `sudo` or `root` privileges.
+| Gate / Audit Layer | Tool | Result | Details |
+|---|---|---|---|
+| **Snyk Code (SAST)** | `snyk code test` (`TaliskerMan`) | ✅ PASS | `0` Snyk Code issues across Dart, C, JavaScript ESM, and Shell |
+| **SonarQube Cloud Quality Gate** | `TaliskerMan_MyWay` (`main`) | ✅ PASS | Quality Gate `OK` (`0` Bugs, `0` Vulnerabilities, `0` Security Hotspots, `0` Code Smells) |
+| **Flutter Static Analysis & Tests** | `flutter analyze` + `flutter test` | ✅ PASS | `0` analyzer issues, `13 / 13` unit tests passed |
+| **Shell & Guide Static Analysis** | `shellcheck` + `node --check` | ✅ PASS | `0` warnings across `build_linux.sh` and `docs/guide/build_guide.js` |
+| **Supply Chain & Secrets (`CP-SBOM`)** | `syft`, `grype`, `osv-scanner`, `trivy` | ✅ PASS | Path-sanitized CycloneDX SBOM (`Audit/SBOM-Linux.json`); `0` vulnerabilities, `0` secrets, `0` host workstation paths |
 
-## Vulnerability Scans Summary
-1. **Dart & Flutter Analysis**: All 12 unit tests passed.
-2. **Semgrep OSS**: Clean pass (0 findings).
-3. **OSV-Scanner**: Clean pass (0 vulnerabilities across 81 dependencies).
-4. **Syft SBOM**: CycloneDX SBOM generated and verified in `Audit/SBOM-Linux.json` and `Audit/sbom.json`.
+---
 
-**Conclusion**: All static analysis, dependency scanning, and quality checks passed cleanly. Release v1.0.2+4 meets all security criteria for official deployment.
+## 2. Security Safeguards & Architecture
+- **Unprivileged Wayland Portal & PipeWire Capture:** Screen and audio access go strictly through XDG Desktop Portals (`xdg-desktop-portal`) and PipeWire after explicit user consent. Screen-capture file descriptors transfer over an unpredictable `0600` UNIX socket inside `XDG_RUNTIME_DIR` (never `/tmp`), and portal sessions close immediately when recording stops.
+- **Native C / GStreamer Memory & Format Safety (`native/libmyway_capture.c`):** Enforces UTF-8 boundary-safe path encoding, literal-format `snprintf`, descriptor-scoped `fchmod`/`chmod`, and property-bound GStreamer `filesink` locations (preventing pipeline-string injection).
+- **Zero Telemetry & Hardened Debug Logging (`CP-Logging`):** Makes zero network connections. Optional debug logs (`myway_debug.log`) apply CR/LF sanitization (`LogService.sanitize`), `0600` owner-only permissions, and 5 MiB rotation.
+- **Cryptographic Packaging (`L-DEB-Packaging`, `L-Release`):** `myway_1.0.2-6_amd64.deb` is built rootlessly (`dpkg-deb --root-owner-group`), signed with maintainer key `Chuck Talk <chuck@nordheim.online>` (`D60BA098CDA22A20BD8BB6834E99214B22CFEE40`) in ASCII (`.asc`) and binary (`.sig`) formats, hashed with SHA-512/SHA-256, and archived in `~/NOBuilds/MyWay-11-27-2026-1.0.2-6/`.

@@ -1,6 +1,6 @@
 title: MyWay
 subtitle: Installation and User Guide
-version: 1.0.2 (with the October 2026 fixes)
+version: 1.0.2+6
 platforms: Linux (GNOME on Wayland)
 ## About MyWay
 
@@ -31,13 +31,13 @@ On an X11 session, MyWay falls back to recording through X11 and lets you click 
 
 ## Installing MyWay
 
-Each release includes `myway_<version>_amd64.deb`, a SHA-512 checksum and a detached GPG signature.
+Each release includes `myway_1.0.2-6_amd64.deb`, a SHA-512 checksum, detached GPG signatures and the Nordheim Online public key (`chuck_pubkey.asc`).
 
 ```
-sha512sum -c myway_<version>_amd64.deb.sha512
+sha512sum -c myway_1.0.2-6_amd64.deb.sha512
 gpg --import chuck_pubkey.asc
-gpg --verify myway_<version>_amd64.deb.asc myway_<version>_amd64.deb
-sudo apt install ./myway_<version>_amd64.deb
+gpg --verify myway_1.0.2-6_amd64.deb.asc myway_1.0.2-6_amd64.deb
+sudo apt install ./myway_1.0.2-6_amd64.deb
 ```
 
 `apt` installs the GStreamer, PipeWire and portal packages MyWay needs. Open **MyWay** from your applications menu.
@@ -111,7 +111,7 @@ Version, license and credits.
 - MyWay has no telemetry and makes no network connections. Recordings and logs stay on your computer.
 - On Wayland, screen access goes through GNOME's screen-sharing portal, which always asks you first.
 - The screen-capture handle is passed between MyWay's components through a private socket in your user runtime folder, readable by you only.
-- Logs are only written when you turn on debug logging, and only sent if you choose to email them.
+- Logs are only written when you turn on debug logging (`0600` owner-only permissions, sanitized and rotated at 5 MiB), and only sent if you choose to email them.
 
 ## Limitations
 
@@ -138,7 +138,7 @@ Version, license and credits.
 
 ## Support and license
 
-MyWay is free, open-source software. Report problems on GitHub (github.com/TaliskerMan/MyWay) or email **support@nordheim.online**.
+MyWay is free, open-source software. Report problems on GitHub (github.com/TaliskerMan/MyWay) or email **support@nordheim.online** / **chuck@nordheim.online**.
 
 | | |
 |---|---|

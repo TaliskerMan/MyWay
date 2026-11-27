@@ -91,3 +91,5 @@ bin/
 # ---- macOS cruft ----
 .DS_Store
 .scannerwork/
+node_modules/
+**/node_modules/

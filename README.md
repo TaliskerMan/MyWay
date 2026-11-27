@@ -19,29 +19,27 @@ MyWay has no telemetry and makes no network connections. On Wayland it uses the 
 
 MyWay is distributed as a cryptographically signed Debian (`.deb`) package for seamless integration with Ubuntu and Debian-based Linux distributions. 
 
-1. Download the latest `.deb` release from the [GitHub Releases](https://github.com/TaliskerMan/MyWay/releases) page.
-2. Install the package using `apt` to resolve any system dependencies automatically:
+1. Download `myway_1.0.2-6_amd64.deb`, `myway_1.0.2-6_amd64.deb.sha512`, `myway_1.0.2-6_amd64.deb.asc`, and `chuck_pubkey.asc` from the [GitHub Releases](https://github.com/TaliskerMan/MyWay/releases) page.
+2. Verify the download's SHA-512 checksum and GPG signature, then install via `apt` to resolve all system dependencies automatically:
    ```bash
-   sudo apt install ./myway_*_amd64.deb
+   sha512sum -c myway_1.0.2-6_amd64.deb.sha512
+   gpg --import chuck_pubkey.asc
+   gpg --verify myway_1.0.2-6_amd64.deb.asc myway_1.0.2-6_amd64.deb
+   sudo apt install ./myway_1.0.2-6_amd64.deb
    ```
 3. MyWay will now be available in your application launcher!
 
-`apt` installs what MyWay needs: GStreamer 1.22+ with the base, good, bad and ugly plug-in sets, PipeWire, and `xdg-desktop-portal` (plus `xdg-desktop-portal-gnome`, recommended).
-
-To verify a download first:
-```bash
-sha512sum -c myway_<version>_amd64.deb.sha512
-gpg --import chuck_pubkey.asc
-gpg --verify myway_<version>_amd64.deb.asc myway_<version>_amd64.deb
-```
+`apt` installs what MyWay needs: GStreamer 1.22+ with the base, good, bad and ugly plug-in sets, PipeWire, `x11-utils`, and `xdg-desktop-portal` (plus `xdg-desktop-portal-gnome`, recommended).
 
 ## Usage
 
+MyWay's left navigation rail provides six sections (**Audio**, **Settings**, **Record**, **Library**, **Support**, and **About**):
+
 1. **Launch the Application**: Open MyWay from your GNOME app drawer.
-2. **Configure Audio**: In the **Audio** section, pick your audio input; the level meter shows it is picking up sound.
-3. **Select Recording Mode**: In the **Record** section, choose **Full Screen** or **Window**.
-4. **Record**: Press the prominent **Record** button. The Wayland screen-sharing portal will prompt you to grant MyWay permission to view your screen (a security feature of Wayland).
-5. **Stop**: Once finished, press **Stop**. The video will automatically be saved to your configured output folder.
+2. **Configure Audio & Settings**: In **Audio**, pick your input device and confirm the live level meter responds. In **Settings**, choose your codec (`H.264`, `H.265`, or `AV1`), quality (`Source` or downscale to `720p`/`1080p`/`2160p`), bitrate (`2–80 Mbps`), and output folder (default `~/Videos`).
+3. **Select Recording Mode**: In **Record**, choose **Full Screen** or **Window**.
+4. **Record**: Press the prominent **Record** button. On Wayland, the screen-sharing portal prompts you to choose which screen or window MyWay may record.
+5. **Stop & Manage**: Press **Stop**. Recordings are saved as `myway_rec_<timestamp>.mp4` and listed in **Library** (where you can play, rename, or open their folder).
 
 ## Saving Videos & Hosting
 
@@ -54,7 +52,7 @@ By default, MyWay saves recordings as MP4 files named `myway_rec_<timestamp>.mp4
 If you run into issues while capturing or saving videos, MyWay includes a built-in diagnostic suite:
 
 1. Open MyWay and navigate to the **Support** tab in the sidebar.
-2. Toggle **Enable Debug Logging** to ON.
+2. Toggle **Enable Debug Logging** to ON (writes sanitized local logs with `0600` permissions and 5 MiB rotation).
 3. Attempt to reproduce your issue (e.g., start and stop a recording).
 4. Return to the Support tab and click **Export Logs & Contact Support**. 
 5. The application will automatically generate a compressed archive (`MyWay_Logs.tar.gz`) in your `~/Downloads` folder.
@@ -66,6 +64,8 @@ If you run into issues while capturing or saving videos, MyWay includes a built-
 - **"Recording stopped unexpectedly"**: The recording pipeline hit an error (for example, the disk filled up). Turn on debug logging in **Support** and try again to see why.
 - **No Audio**: Check your system settings to ensure your microphone is not muted at the OS level. Verify the correct device is selected in the MyWay dropdown.
 
-## License
+## Author & License
+
+Copyright © 2026 Chuck Talk, Nordheim Online, LLC — <chuck@nordheim.online> · https://nordheim.online
 
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) - see the `LICENSE` file for details.

@@ -27,10 +27,11 @@ if [[ -f pubspec.yaml ]]; then
     VERSION="${CURRENT_VERSION%+*}"
     BUILD_SUFFIX="${CURRENT_VERSION#*+}"
 else
-    echo "pubspec.yaml not found!"
+    echo "pubspec.yaml not found!" >&2
     exit 1
 fi
 PKG_NAME="myway"
+readonly SBOM_JSON="${SCRIPT_DIR}/Audit/SBOM-Linux.json"
 
 # Single source of truth: regenerate assets/version.json from pubspec so the
 # About screen can never show a stale version.
@@ -43,7 +44,11 @@ cat > "${SCRIPT_DIR}/assets/version.json" <<JSON
   "package_name": "myway"
 }
 JSON
+# CP-ChangeComments (2026-11-27, v1.0.2+6): Resolve user-local Flutter SDK when PATH omits ~/.local/flutter/bin.
 FLUTTER="flutter"
+if ! command -v "${FLUTTER}" >/dev/null 2>&1 && [[ -x "${HOME}/.local/flutter/bin/flutter" ]]; then
+    FLUTTER="${HOME}/.local/flutter/bin/flutter"
+fi
 ARTIFACTS="${SCRIPT_DIR}/packaging/linux_build/artifacts"
 
 # Fix clang++ linker issue on some arm64/Linux environments
@@ -73,6 +78,8 @@ mkdir -p "${ARTIFACTS}"
 
 echo "==> Building Flutter Linux release..."
 cd "${SCRIPT_DIR}"
+# CP-ChangeComments (2026-11-27, v1.0.2+6): Enforce immutable lockfile resolution per CP-SupplyChainPinning-HTTPS.
+"${FLUTTER}" pub get --enforce-lockfile
 "${FLUTTER}" build linux --release
 
 echo "==> Generating SBOM via Syft..."
@@ -86,21 +93,28 @@ if ! command -v syft &> /dev/null; then
 fi
 if command -v "${SYFT_BIN}" &> /dev/null; then
     mkdir -p "${SCRIPT_DIR}/Audit"
+    # CP-ChangeComments (2026-11-27, v1.0.2+6): Stamp CycloneDX metadata, exclude Audit/packaging/node_modules, and strip host paths.
     "${SYFT_BIN}" dir:. \
+        --source-name "${PKG_NAME}" \
+        --source-version "${VERSION}-${BUILD_SUFFIX}" \
         --exclude ./venv \
         --exclude ./android \
         --exclude ./ios \
         --exclude ./macos \
         --exclude ./build \
+        --exclude ./packaging \
         --exclude ./packaging_output \
+        --exclude ./Audit \
         --exclude ./dist \
         --exclude ./plan \
         --exclude ./.dart_tool \
         --exclude ./.agents \
         --exclude ./.gemini \
-        -o cyclonedx-json > "${SCRIPT_DIR}/Audit/SBOM-Linux.json"
-    cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${SCRIPT_DIR}/Audit/SBOM-Linux"
-    cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${SCRIPT_DIR}/Audit/sbom.json"
+        --exclude './**/node_modules' \
+        -o cyclonedx-json > "${SBOM_JSON}"
+    sed -i "s|${SCRIPT_DIR}/\?||g" "${SBOM_JSON}"
+    cp "${SBOM_JSON}" "${SCRIPT_DIR}/Audit/SBOM-Linux"
+    cp "${SBOM_JSON}" "${SCRIPT_DIR}/Audit/sbom.json"
 fi
 
 echo "==> Preparing DEB package structure..."
@@ -189,7 +203,7 @@ if command -v gpg > /dev/null 2>&1; then
     cp "${ARTIFACTS}/chuck_pubkey.asc" "${ARTIFACTS}/pubkey.asc"
     echo "    Pubkeys: ${ARTIFACTS}/chuck_pubkey.asc and pubkey.asc"
 else
-    echo "    WARNING: gpg not found - package NOT signed!"
+    echo "    WARNING: gpg not found - package NOT signed!" >&2
 fi
 
 echo "==> Generating SHA512 and SHA256 checksums..."
@@ -208,24 +222,37 @@ if [[ -f "${SCRIPT_DIR}/Audit/security_report.md" ]]; then
     cp "${SCRIPT_DIR}/Audit/security_report.md" "${ARTIFACTS}/security_report.md"
 fi
 
-tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=.agents --exclude=.gemini --exclude=packaging/linux_build -czf "${ARTIFACTS}/myway_source.tar.gz" -C "${SCRIPT_DIR}" .
+# CP-ChangeComments (2026-11-27, v1.0.2+6): Exclude Audit, scanner caches, and node_modules from source tarball.
+tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=.agents --exclude=.gemini --exclude=Audit --exclude=.scannerwork --exclude=.sonarlint --exclude='**/node_modules' --exclude=packaging/linux_build -czf "${ARTIFACTS}/myway_source.tar.gz" -C "${SCRIPT_DIR}" .
+
+# write_directory_checksums computes sorted basename SHA512SUMS and SHA256SUMS manifests inside target_dir.
+write_directory_checksums() {
+    local target_dir="$1"
+    (
+        cd "${target_dir}"
+        rm -f -- SHA512SUMS SHA256SUMS
+        find . -maxdepth 1 -type f ! -name 'SHA512SUMS' ! -name 'SHA256SUMS' -printf '%P\n' | LC_ALL=C sort | xargs sha512sum > SHA512SUMS
+        find . -maxdepth 1 -type f ! -name 'SHA512SUMS' ! -name 'SHA256SUMS' -printf '%P\n' | LC_ALL=C sort | xargs sha256sum > SHA256SUMS
+    )
+}
 
 # Multi-file checksums
-(cd "${ARTIFACTS}" && { sha512sum -- ./* > SHA512SUMS 2>/dev/null || true; })
-(cd "${ARTIFACTS}" && { sha256sum -- ./* > SHA256SUMS 2>/dev/null || true; })
+write_directory_checksums "${ARTIFACTS}"
 
 echo "==> Copying to NOBuilds directory..."
 DATE_STR=$(date +%m-%d-%Y)
-NOBUILDS_DIR="${HOME}/NOBuilds/MyWay-${DATE_STR}-${VERSION}"
+# CP-ChangeComments (2026-11-27, v1.0.2+6): Include BUILD_SUFFIX in NOBuilds archive folder per CP-AutoIncrement / L-Release.
+NOBUILDS_DIR="${HOME}/NOBuilds/MyWay-${DATE_STR}-${VERSION}-${BUILD_SUFFIX}"
 mkdir -p "${NOBUILDS_DIR}"
 cp -- "${ARTIFACTS}/"* "${NOBUILDS_DIR}/"
 
 # Copy license, readme, sbom to NOBuilds
 cp "${SCRIPT_DIR}/LICENSE" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/README.md" "${NOBUILDS_DIR}/" || true
-cp "${SCRIPT_DIR}/Audit/SBOM-Linux.json" "${NOBUILDS_DIR}/" || true
+cp "${SBOM_JSON}" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/Audit/SBOM-Linux" "${NOBUILDS_DIR}/" || true
 cp "${SCRIPT_DIR}/Audit/sbom.json" "${NOBUILDS_DIR}/" || true
+write_directory_checksums "${NOBUILDS_DIR}"
 
 echo ""
 echo "==================================="

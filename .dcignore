@@ -4,3 +4,5 @@ native/build/
 Audit/
 packaging/
 test/
+node_modules/
+docs/guide/node_modules/

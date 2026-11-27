@@ -10,3 +10,4 @@ exclude:
     - Audit/**
     - packaging/**
     - test/**
+    - "**/node_modules/**"
