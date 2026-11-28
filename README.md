@@ -1,8 +1,8 @@
 # MyWay Screen Recorder
 
-<p align="center">
+
 ![MyWay Logo](assets/myway.png)
-</p>
+
 
 MyWay is a native Linux screen recorder designed for GNOME on Wayland. Built with Flutter and a native C/GStreamer backend, it records your full screen or a single window, with audio, to an MP4 file on your computer, following Nordheim Online's principle of "first, do no harm".
 
