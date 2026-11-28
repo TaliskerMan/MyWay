@@ -1,5 +1,9 @@
 # MyWay Screen Recorder
 
+![MyWay Logo](assets/myway.png)
+
+MyWay is a native Linux screen recorder designed for GNOME on Wayland. Built with Flutter and a native C/GStreamer backend, it records your full screen or a single window, with audio, to an MP4 file on your computer, following Nordheim Online's principle of "first, do no harm".
+
 <p align="center">
   <a href="https://sonarcloud.io/summary/new_code?id=TaliskerMan_MyWay"><img src="https://sonarcloud.io/api/project_badges/measure?project=TaliskerMan_MyWay&metric=alert_status" alt="Quality Gate Status"></a>
   <a href="https://sonarcloud.io/summary/new_code?id=TaliskerMan_MyWay"><img src="https://sonarcloud.io/api/project_badges/measure?project=TaliskerMan_MyWay&metric=security_rating" alt="Security Rating"></a>
@@ -7,9 +11,6 @@
   <a href="https://sonarcloud.io/summary/new_code?id=TaliskerMan_MyWay"><img src="https://sonarcloud.io/api/project_badges/measure?project=TaliskerMan_MyWay&metric=sqale_rating" alt="Maintainability Rating"></a>
 </p>
 
-![MyWay Logo](assets/myway.png)
-
-MyWay is a native Linux screen recorder designed for GNOME on Wayland. Built with Flutter and a native C/GStreamer backend, it records your full screen or a single window, with audio, to an MP4 file on your computer, following Nordheim Online's principle of "first, do no harm".
 
 MyWay has no telemetry and makes no network connections. On Wayland it uses the standard XDG Desktop Portal, so the desktop asks your permission before MyWay can see your screen.
 
